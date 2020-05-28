@@ -1,0 +1,12 @@
+Package: argofda
+Type: Package
+Title: A functional-data approach to the Argo data
+Version: 0.1.0
+Author: Drew Yarger, Stilian Stoev, Tailen Hsing
+Maintainer: Drew Yarger <dyarger@umich.edu>
+Description: Accompanies the paper "A functional-data approach to the Argo data"
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 1.0.4.6), RcppArmadillo, fda, Matrix, sparseinv
+LinkingTo: Rcpp
