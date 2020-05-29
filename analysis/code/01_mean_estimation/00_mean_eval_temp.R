@@ -111,5 +111,5 @@ if (nchar(value) == 3) {
 } else if(nchar(value) == 4) {
   value <- paste0('0',value)
 }
-file.to.save <- paste0('analysis/results/mean_one_stage/mean_one_stage_temp_', value, '.Rdata')
+file.to.save <- paste0('analysis/results/mean_estimation/mean_one_stage_temp_', value, '.Rdata')
 eval(parse(text=paste0('save(', object_name, ', file = file.to.save)')))

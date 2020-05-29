@@ -11,11 +11,11 @@ longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
 grid_to_compute$index <- 1:nrow(grid_to_compute)
 # Load mean results
-calc_files_psal <- list.files('analysis/results/mean_one_stage/', pattern = 'psal')
-calc_files_temp <- list.files('analysis/results/mean_one_stage/', pattern = 'temp')
+calc_files_psal <- list.files('analysis/results/mean_estimation/', pattern = 'psal')
+calc_files_temp <- list.files('analysis/results/mean_estimation/', pattern = 'temp')
 final_list <- list()
 for (j in 1:length(calc_files_temp)) {
-  load(paste0('analysis/results/mean_one_stage/', calc_files_temp[j]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_temp[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   temp_funs <- lapply(now, function(x) {
@@ -26,7 +26,7 @@ for (j in 1:length(calc_files_temp)) {
     }
   })
   eval(parse(text=paste0('rm(', file, ')')))
-  load(paste0('analysis/results/mean_one_stage/', calc_files_psal[j]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_psal[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   psal_funs <- lapply(now, function(x) {

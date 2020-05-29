@@ -7,12 +7,12 @@ type <- 'temp'
 label <- c('Temperature', 'Salinity')[c('temp', 'psal') == type]
 label_units <- c('Temp (°C)', 'PSU')[c('temp', 'psal') == type]
 color_scale <- list(c(-2, 32),c(30, 38))[[which(c('temp', 'psal') == type)]]
-calc_files <- list.files('analysis/results/mean_one_stage/', pattern = type)
+calc_files <- list.files('analysis/results/mean_estimation/', pattern = type)
 
 # Load in mean funcitons
 final_list <- list()
 for (j in 1:length(calc_files)) {
-  load(paste0('analysis/results/mean_one_stage/', calc_files[j]))
+  load(paste0('analysis/results/mean_estimation/', calc_files[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file, '')))
   eval(parse(text=paste0('rm(', file, ')')))
@@ -126,7 +126,7 @@ ggplot(data = pred_vals_long[pred_vals_long$year %in% c('2010', '2013', 'Avg'),]
   scale_color_viridis_d()+
   labs(x = 'Pressure (decibars)', y = label_units,color = 'Function')+
   theme(legend.position = 'bottom')
-ggsave(filename = paste0('analysis/images/mean_one_stage/mean_', type, '_example_', long_example, '_', lat_example, '.png'),
+ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_example_', long_example, '_', lat_example, '.png'),
        scale = 1.2, height = 5, width = 3.75, dpi = 600)
 
 # extrapolate local linear day function
@@ -145,7 +145,7 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_one_stage/mean_', type, '_section_', long_section, '.png'),
+png(filename =  paste0('images/mean_estimation/mean_', type, '_section_', long_section, '.png'),
     width = 600, height = 450)
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
                    legend.cex = 8, cex.axis = 2.2)
@@ -160,7 +160,7 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_one_stage/mean_', type, '_section_ll_time_', long_section, '.png'),
+png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_time_', long_section, '.png'),
     width = 600, height = 450)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
@@ -178,7 +178,7 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_one_stage/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
+png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
     width = 600, height = 450)
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
                    legend.cex = 8, cex.axis = 2.2)
@@ -186,7 +186,7 @@ axis(2, at = seq(0, 2000, by = 250)/2000, seq(0, 2000, by = 250), cex = 5)
 axis(1, at=(seq(-50.5, 50.5, by = 10) + 50.5)/103.5, labels=seq(-50.5, 50.5, by = 10))
 dev.off()
 
-png(filename =  paste0('images/mean_one_stage/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
+png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
     width = 600, height = 450)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 fields::image.plot(pred_vals_section*100, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
@@ -225,7 +225,7 @@ ggplot()+
   facet_wrap(~year) +
   labs(x = 'Longitude', y = 'Latitude',
        fill = label_units,title = paste0('Yearly Estimated ', label, ', ',  p_val,' decibars'))
-ggsave(filename = paste0('analysis/images/mean_one_stage/mean_', type, '_', p_val,'.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_', p_val,'.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 # average over years
@@ -236,7 +236,7 @@ ggplot()+
   scale_fill_gradientn(limits = color_scale,colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude',
        fill = label_units, title = paste0('Average Estimated ', label, ', ', p_val,' decibars'))
-ggsave(filename = paste0('analysis/images/mean_one_stage/avg_mean_', type, '_', p_val, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/avg_mean_', type, '_', p_val, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 
@@ -249,7 +249,7 @@ ggplot()+
   scale_fill_viridis()+
   labs(x = 'Longitude', y = 'Latitude', fill = 'log10(lambda)',
        title = paste0('Lambda Chosen for ', label))
-ggsave(filename = paste0('analysis/images/mean_one_stage/lambdas_', type, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/lambdas_', type, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 
@@ -261,7 +261,7 @@ ggplot(data = samples, aes(x =long_p, y = lat, fill = n_prof))+
   scale_fill_viridis_c()+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Profiles\nUsed',
        title = paste0('Profiles Used for Each Year, ', label))
-ggsave(filename = paste0('analysis/images/mean_one_stage/profiles_year_', type, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/profiles_year_', type, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 # amount of time
@@ -271,7 +271,7 @@ ggplot(data = cbind(grid_to_compute_only, seconds = prof_info[,2]), aes(x =long_
   scale_fill_viridis_c()+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Seconds',
        title = paste0('Time to compute, ', label))
-ggsave(filename = paste0('analysis/images/mean_one_stage/time_', type, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/time_', type, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 # number of measurements
@@ -281,7 +281,7 @@ ggplot(data = cbind(grid_to_compute_only, measurements = prof_info[,3]), aes(x =
   scale_fill_viridis_c()+
   labs(x = 'Longitude', y = 'Latitude', fill = '#',
        title = paste0('Number of Measurements Used, ', label))
-ggsave(filename = paste0('analysis/images/mean_one_stage/measurements_', type, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/measurements_', type, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 # number of profiles
 ggplot(data = cbind(grid_to_compute_only, profiles = prof_info[,4]), aes(x =long_p, y = lat, fill = profiles))+
@@ -290,7 +290,7 @@ ggplot(data = cbind(grid_to_compute_only, profiles = prof_info[,4]), aes(x =long
   scale_fill_viridis_c()+
   labs(x = 'Longitude', y = 'Latitude', fill = '#',
        title = paste0('Number of Profiles Used, ', label))
-ggsave(filename = paste0('analysis/images/mean_one_stage/profiles_', type, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/profiles_', type, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 ###### Derivative functions #####
@@ -308,7 +308,7 @@ ggplot()+
   scale_fill_gradientn(limits = c(-limit_time, limit_time),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill =  paste0(label_units,  '\nper day'))
-ggsave(filename = paste0('analysis/images/mean_one_stage/gradient_time_', type, '_', p_val, 'new.png'), scale = .8,
+ggsave(filename = paste0('analysis/images/mean_estimation/gradient_time_', type, '_', p_val, 'new.png'), scale = .8,
        height = 5, width = 7.25)
 
 #in space
@@ -332,7 +332,7 @@ ggplot()+
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude',
     fill = paste0('Gradient\nLength\n(', label_units,  '/100km)'))
-ggsave(filename = paste0('analysis/images/mean_one_stage/gradient_length_', type, '_', p_val, '.png'), scale = 1.2,
+ggsave(filename = paste0('analysis/images/mean_estimation/gradient_length_', type, '_', p_val, '.png'), scale = 1.2,
        height = 5, width = 7.25)
 
 # gradient length and arrows
@@ -363,9 +363,9 @@ ggplot()+
   labs(x = 'Longitude', y = 'Latitude',
        color = paste0('Gradient\nLength\n(', label_units,  '/100km)'),
        fill = paste0('Gradient\nLength\n(', label_units,  '/100km)'))
-ggsave(filename = paste0('analysis/images/mean_one_stage/deriv_', type, '_', p_val, '.png'),
+ggsave(filename = paste0('analysis/images/mean_estimation/deriv_', type, '_', p_val, '.png'),
        scale = .8,height = h, width = 7.25)
-ggsave(filename = paste0('analysis/images/mean_one_stage/deriv_', type, '_', p_val, '.eps'),
+ggsave(filename = paste0('analysis/images/mean_estimation/deriv_', type, '_', p_val, '.eps'),
        scale = .8,height = h, width = 7.25)
 
 

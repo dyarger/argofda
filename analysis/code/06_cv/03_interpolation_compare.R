@@ -3,7 +3,7 @@ library(dplyr)
 library(argofda)
 library(Matrix)
 
-calc_files <- list.files('analysis/results/joint_TS_20/', pattern = 'cv_resu')
+calc_files <- list.files('analysis/results/cv/', pattern = 'cv_resu')
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 
@@ -20,7 +20,7 @@ rg_levels <- c(2.5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
 final_list <- list()
 
 for (j in 1:length(calc_files)) {
-  load(paste0('analysis/results/joint_TS_20/', calc_files[j]))
+  load(paste0('analysis/results/cv/', calc_files[j]))
   n_delayed <- sapply(cv_results, function(x) {
     if (length(x) == 7) {
       if (is.null(x[[6]])) {
@@ -159,7 +159,7 @@ apply(psal_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(
 
 # Median Absolute residual
 cex <- 1
-png('analysis/images/joint_TS_20/temp_interp_comparison_median.png',
+png('analysis/images/cv/temp_interp_comparison_median.png',
    width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,xlim = c(0,2000),
@@ -176,7 +176,7 @@ salinity_median_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% wh
                                  function(x) median(abs(x), na.rm = T))
 salinity_median_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                                  function(x) median(abs(x), na.rm = T))
-png('analysis/images/joint_TS_20/psal_interp_comparison_median.png',
+png('analysis/images/cv/psal_interp_comparison_median.png',
     width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = salinity_median_mean_summary, cex = cex - .5,xlim = c(0, 2000),
@@ -188,7 +188,7 @@ legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col 
 dev.off()
 
 # Q3
-png('analysis/images/joint_TS_20/temp_interp_comparison_Q3.png',
+png('analysis/images/cv/temp_interp_comparison_Q3.png',
     width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)), cex = cex - .5,xlim = c(0,2000),
@@ -205,7 +205,7 @@ salinity_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% which(pro
                                       function(x) quantile(abs(x), probs = .75, na.rm = T))
 salinity_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                                  function(x) quantile(abs(x), probs = .75, na.rm = T))
-png('analysis/images/joint_TS_20/psal_interp_comparison_Q3.png',
+png('analysis/images/cv/psal_interp_comparison_Q3.png',
     width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),
@@ -217,7 +217,7 @@ legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col 
 dev.off()
 
 # RMSE
-png('analysis/images/joint_TS_20/temp_interp_comparison_RMSE.png',
+png('analysis/images/cv/temp_interp_comparison_RMSE.png',
     width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))), cex = cex - .5,xlim = c(0,2000),
@@ -237,7 +237,7 @@ salinity_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% which(pro
                                function(x) sqrt(mean(x^2, na.rm = T)))
 salinity_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                           function(x) sqrt(mean(x^2, na.rm = T)))
-png('analysis/images/joint_TS_20/psal_interp_comparison_RMSE.png',
+png('analysis/images/cv/psal_interp_comparison_RMSE.png',
     width =1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),
@@ -250,7 +250,7 @@ dev.off()
 
 ## pc representation error
 
-png('analysis/images/joint_TS_20/temp_score_rep.png',
+png('analysis/images/cv/temp_score_rep.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,xlim = c(0, 2000),
@@ -274,7 +274,7 @@ salinity_respresentation_summary <- apply(psal_representation_summary[profile_nu
 salinity_rep_error_summary <- apply(psal_rep_error_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                           function(x) median(abs(x), na.rm = T))
 
-png('analysis/images/joint_TS_20/psal_score_rep.png',
+png('analysis/images/cv/psal_score_rep.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),

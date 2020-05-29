@@ -1,5 +1,5 @@
 load('analysis/data/jan_march_residuals.RData')
-load('analysis/results/joint_TS_20/cv_results_8.RData')
+load('analysis/results/cv/cv_results_8.RData')
 profile_nums <- sapply(cv_results, function(x) x[[7]][1])
 single_results <- cv_results[[574]]
 residuals <- single_results[[3]]
@@ -62,7 +62,7 @@ r_x_psal = sqrt(single_results[[2]][[3]]* rowSums(sapply(1:K2, function(x) {
   single_results[[2]][[4]][x]^2 * pc_vals_psal[,x]^2})) +
     abs(qnorm(p = (1-quantile)/nrow(residuals)/2 ) )^2 *var_pred_psal_out)
 
-png('analysis/images/joint_TS_20/cv_example_temp.png',  width = 400/72, height = 600/72,
+png('analysis/images/cv/cv_example_temp.png',  width = 400/72, height = 600/72,
    units = 'in', res = 144)
 min_val <- min(-r_x)
 max_val <- max(r_x)
@@ -79,7 +79,7 @@ legend('bottomleft',c('Observed', 'Prediction', '2 SD bound', '2 SD band'),
        pt.cex = c(.5, NA, NA, NA), cex = 1.2)
 dev.off()
 
-png('analysis/images/joint_TS_20/cv_example_psal.png', width = 400/72, height = 600/72,
+png('analysis/images/cv/cv_example_psal.png', width = 400/72, height = 600/72,
     units = 'in', res = 144)
 min_val <- min(-r_x_psal)
 max_val <- max(r_x_psal)

@@ -429,5 +429,5 @@ cv_results <- mclapply(indexes_list[[array_id]],
 b <- proc.time()
 b-a
 
-save(cv_results, file = paste0('analysis/results/joint_TS_20/cv_results_', array_id,
+save(cv_results, file = paste0('analysis/results/cv/cv_results_', array_id,
                                '.RData'))

@@ -2,7 +2,7 @@
 # comparison of interpolation and raw residuals
 library(dplyr)
 
-calc_files <- list.files('analysis/results/joint_TS_20/', pattern = 'cv_resu')
+calc_files <- list.files('analysis/results/cv/', pattern = 'cv_resu')
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 
@@ -14,9 +14,6 @@ profile_nums_1500 <- (1:length(profFloatIDAggr))[1:length(profFloatIDAggr) %in% 
 KS_profiles <- unique(c(profile_nums_10, profile_nums_300, profile_nums_1500))
 length(KS_profiles)
 
-load('analysis/results/psal_one_stage_cov_pca.RData')
-load('analysis/results/temp_one_stage_cov_pca.RData')
-
 rg_levels <- c(2.5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 182.5, 200,
                220, 240, 260, 280, 300, 320, 340, 360, 380, 400, 420, 440, 462.5, 500, 550, 600, 650, 700, 750,
                800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1412.5, 1500, 1600, 1700, 1800, 1900, 1975)
@@ -24,7 +21,7 @@ final_list <- list()
 
 
 for (j in 1:length(calc_files)) {
-  load(paste0('analysis/results/joint_TS_20/', calc_files[j]))
+  load(paste0('analysis/results/cv/', calc_files[j]))
   n_delayed <- sapply(cv_results, function(x) {
     if (length(x) == 7) {
       if (is.null(x[[6]])) {
@@ -75,7 +72,7 @@ residual_summary_delayed <- residuals %>%
   filter(mode == 'D')
 
 cex <- .8
-png('analysis/images/joint_TS_20/temp_interpolation_comparison.png',
+png('analysis/images/cv/temp_interpolation_comparison.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(as.numeric(as.character(residual_summary$pgroup)), residual_summary$temp_mean_residual, cex = cex,
@@ -95,7 +92,7 @@ legend('topright', c('Raw Mean Values', 'Interp Mean Values', 'Raw Pred Values '
        pt.bg = c(NA, 2, NA, NA))
 dev.off()
 
-png('analysis/images/joint_TS_20/psal_interpolation_comparison.png',
+png('analysis/images/cv/psal_interpolation_comparison.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 plot(as.numeric(as.character(residual_summary_delayed$pgroup)), residual_summary_delayed$psal_mean_residual, cex = cex,
@@ -113,3 +110,23 @@ legend('topright', c('Raw Mean Values', 'Interp Mean Values', 'Raw Pred Values '
        pch = c(1,20,3,4),
        pt.bg = c(NA, 2, NA, NA))
 dev.off()
+
+residual_summary <- residuals %>%
+  select(pressure, temp_residual) %>%
+  mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
+  group_by(pgroup) %>%
+  summarise_all(list(function(z) median(abs(z), na.rm = T)))
+
+as.data.frame(residual_summary)
+
+residual_summary <- residuals %>%
+  select(pressure, temp_residual) %>%
+  mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
+  group_by(pgroup) %>%
+  summarise_all(list(function(z) quantile(abs(z), probs = .75, na.rm = T)))
+
+as.data.frame(residual_summary[, c('pressure', 'temp_residual')])
+
+
+
+

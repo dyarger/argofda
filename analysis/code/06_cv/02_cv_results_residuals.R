@@ -1,7 +1,7 @@
 
 library(dplyr)
 library(ggplot2)
-calc_files <- list.files('analysis/results/joint_TS_20/', pattern = 'cv_resu')
+calc_files <- list.files('analysis/results/cv/', pattern = 'cv_resu')
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 
@@ -11,7 +11,7 @@ rg_levels <- c(2.5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140,
 final_list <- list()
 
 for (j in 1:length(calc_files)) {
-  load(paste0('analysis/results/joint_TS_20/', calc_files[j]))
+  load(paste0('analysis/results/cv/', calc_files[j]))
   n_delayed <- sapply(cv_results, function(x) {
     if (length(x) == 7) {
       if (is.null(x[[6]])) {
@@ -56,7 +56,7 @@ residual_summary_delayed <- residuals %>%
   summarise_all(list(function(z) median(abs(z), na.rm = T))) %>%
   filter(mode == 'D')
 
-png('analysis/images/joint_TS_20/one_stage_compare_temp.png',
+png('analysis/images/cv/one_stage_compare_temp.png',
     width =1200, height = 800, res = 144)
 plot(residual_summary$pgroup, residual_summary$temp_mean_residual, cex = .5,  ylim = c(0, 0.6),
      xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual (°C)')
@@ -64,7 +64,7 @@ points(residual_summary$pgroup, residual_summary$temp_residual, cex = .5, col = 
 legend('topright', c('Mean', 'Model'), col = 1:2, pt.cex = .5, pch = c(1,1))
 dev.off()
 
-png('analysis/images/joint_TS_20/one_stage_compare_psal.png',
+png('analysis/images/cv/one_stage_compare_psal.png',
     width =1200, height = 800, res = 144)
 plot(residual_summary_delayed$pgroup, residual_summary_delayed$psal_mean_residual, cex = .5,  ylim = c(0, 0.10),
      xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual (PSU)')
@@ -83,7 +83,7 @@ residual_summary_bias_delayed <- residuals %>%
   group_by(pgroup, mode) %>%
   summarise_all(list(function(z) mean(z, na.rm = T))) %>%
   ungroup() %>% filter(mode == 'D')
-png('analysis/images/joint_TS_20/one_stage_compare_bias_temp.png', width =1200, height = 800, res = 144)
+png('analysis/images/cv/one_stage_compare_bias_temp.png', width =1200, height = 800, res = 144)
 plot(residual_summary_bias$pgroup, residual_summary_bias$temp_mean_residual, cex = .5,  ylim = c(-.05, .05),
      ylab = 'Mean Residual (°C)', xlab = 'Pressure')
 points(residual_summary_bias$pgroup, residual_summary_bias$temp_residual, cex = .5, col = 2)
@@ -91,7 +91,7 @@ abline(h= 0 )
 legend('topright', c('Mean', 'Model'), col = 1:2, pt.cex = .5, pch = c(1,1))
 dev.off()
 
-png('analysis/images/joint_TS_20/one_stage_compare_bias_psal.png', width =1200, height = 800, res = 144)
+png('analysis/images/cv/one_stage_compare_bias_psal.png', width =1200, height = 800, res = 144)
 plot(residual_summary_bias_delayed$pgroup, residual_summary_bias_delayed$psal_mean_residual, cex = .5,  ylim = c(-.005, .005),
      ylab = 'Mean Residual (PSU)', xlab = 'Pressure')
 points(residual_summary_bias_delayed$pgroup, residual_summary_bias_delayed$psal_residual, cex = .5, col = 2)
@@ -110,7 +110,7 @@ residual_summary_var_delayed <- residuals %>%
   group_by(pgroup, mode) %>%
   summarise_all(list(function(z) var(z, na.rm = T))) %>%
   ungroup() %>% filter(mode == 'D')
-png('analysis/images/joint_TS_20/one_stage_compare_empirical_var_temp.png', width =1200, height = 800, res = 144)
+png('analysis/images/cv/one_stage_compare_empirical_var_temp.png', width =1200, height = 800, res = 144)
 plot(residual_summary_var$pgroup, residual_summary_var$temp_mean_residual, cex = .5,  ylim = c(0, 1.6),
      ylab = 'Variance of Residuals (°C^2)', xlab = 'Pressure')
 points(residual_summary_var$pgroup, residual_summary_var$temp_residual, cex = .5, col = 2)
@@ -122,7 +122,7 @@ legend('topright', c('Mean', 'Model', 'Avg UC Model Variance',
                      'Avg C Model Variance'), col = 1:4, pt.cex = .5, pch = c(1,1,1,1))
 dev.off()
 
-png('analysis/images/joint_TS_20/one_stage_compare_empirical_var_psal.png', width =1200, height = 800, res = 144)
+png('analysis/images/cv/one_stage_compare_empirical_var_psal.png', width =1200, height = 800, res = 144)
 plot(residual_summary_var_delayed$pgroup, residual_summary_var_delayed$psal_mean_residual, cex = .5,  ylim = c(0, .05),
      ylab = 'Variance of Residuals (PSU^2)', xlab = 'Pressure')
 points(residual_summary_var_delayed$pgroup, residual_summary_var_delayed$psal_residual, cex = .5, col = 2)
@@ -159,7 +159,7 @@ residual_summary_coverage_delayed <- residuals %>%
   group_by(pgroup, mode) %>%
   summarise_all(list(function(z) mean(z, na.rm = T))) %>%
   ungroup() %>% filter(mode == 'D')
-png('analysis/images/joint_TS_20/one_stage_coverage_both.png', width =900, height = 600, res = 144)
+png('analysis/images/cv/one_stage_coverage_both.png', width =900, height = 600, res = 144)
 plot(residual_summary_coverage$pgroup, residual_summary_coverage$in_interval_temp, cex = .7, # ylim = c(-.05, .05),
      ylab = 'Pointwise Coverage', xlab = 'Pressure (dbar)',
      ylim = c(.8, 1))
@@ -197,7 +197,7 @@ ggplot()+
   theme_bw()+
   labs(fill = 'RMSE (°C)', x= 'Longitude', y = 'Latitude')+
   theme(panel.background = element_blank() )
-ggsave(file = 'analysis/images/joint_TS_20/location_summary_0_20.png',
+ggsave(file = 'analysis/images/cv/location_summary_0_20.png',
        scale = .8,height = 4, width = 7.25)
 
 ### space comparison 300-500 dbar
@@ -228,7 +228,7 @@ ggplot()+
   theme_bw()+
   labs(fill = 'RMSE (°C)', x= 'Longitude', y = 'Latitude')+
   theme(panel.background = element_blank() )
-ggsave(file = 'analysis/images/joint_TS_20/location_summary_300_500.png',
+ggsave(file = 'analysis/images/cv/location_summary_300_500.png',
        scale = .8,height = 4, width = 7.25)
 
 
@@ -261,7 +261,7 @@ ggplot()+
   theme_bw()+
   labs(fill = 'RMSE (°C)', x= 'Longitude', y = 'Latitude')+
   theme(panel.background = element_blank())
-ggsave(file = 'analysis/images/joint_TS_20/location_summary_1500_2000.png',
+ggsave(file = 'analysis/images/cv/location_summary_1500_2000.png',
        scale = .8,height = 4, width = 7.25)
 
 ## overall coverages

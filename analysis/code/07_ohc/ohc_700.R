@@ -110,8 +110,8 @@ basis <- create.bspline.basis(breaks =knots_pc)
 
 
 ### get mean functions
-calc_files_temp <- list.files('analysis/results/mean_one_stage/', pattern = 'temp')
-calc_files_psal <- list.files('analysis/results/mean_one_stage/', pattern = 'psal')
+calc_files_temp <- list.files('analysis/results/mean_estimation/', pattern = 'temp')
+calc_files_psal <- list.files('analysis/results/mean_estimation/', pattern = 'psal')
 final_list <- list()
 
 latvals <- seq(-79.5, 79.5, by = 1)
@@ -134,14 +134,14 @@ g <- (1025)^(-1) # 1/density of seawater in (kg/m^3)^-1
 
 for (j in 1:length(calc_files_temp)) {
   # get mean functions
-  load(paste0('analysis/results/mean_one_stage/', calc_files_temp[j]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_temp[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file, '')))
   temp_funs <- lapply(now, function(x) {
     if (x[[2]][[1]][1] == 'no profiles in range') {return(NULL)} else {return(x[[1]])}
   })
   eval(parse(text=paste0('rm(', file, ')')))
-  load(paste0('analysis/results/mean_one_stage/', calc_files_psal[j]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_psal[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file, '')))
   psal_funs <- lapply(now, function(x) {

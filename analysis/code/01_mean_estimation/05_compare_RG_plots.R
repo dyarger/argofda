@@ -1,6 +1,6 @@
 
 # RG_comparison
-load('analysis/results/mean_one_stage/mean_review.RData')
+load('analysis/results/mean_estimation/mean_review.RData')
 
 avg_mean <- cbind(avg_mean, grid_used)
 avg_mean$long <- rep(ifelse(grid_used$long< 0, grid_used$long + 360, grid_used$long), each = 206)
@@ -44,10 +44,10 @@ a <- ggplot()+
   labs(x = 'Difference between RG and Functional Means (°C)', y = 'Proportion of Differences')
 a
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_temp_ecdf_', p_val, '.png'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_temp_ecdf_', p_val, '.png'),
        scale = .8,height = 4, width = 7.25)
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_temp_ecdf_', p_val, '.eps'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_temp_ecdf_', p_val, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
 
@@ -62,10 +62,10 @@ a <- ggplot()+
   labs(x = 'Difference between RG and Functional Means (PSU)', y = 'Proportion of Differences')
 a
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_psal_ecdf_', p_val, '.png'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_psal_ecdf_', p_val, '.png'),
        scale = .8,height = 4, width = 7.25)
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_psal_ecdf_', p_val, '_eps.eps'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_psal_ecdf_', p_val, '_eps.eps'),
        scale = .8,height = 4, width = 7.25)
 
 # compare by locations
@@ -85,10 +85,10 @@ a <- ggplot()+
   labs(x = 'Longitude', y = 'Latitude')
 a
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_temp_', p_val, '.png'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_temp_', p_val, '.png'),
        scale = .8,height = 4, width = 7.25)
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_temp_', p_val, '.eps'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_temp_', p_val, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
 
@@ -103,8 +103,8 @@ a <- ggplot()+
   labs(x = 'Longitude', y = 'Latitude', fill = 'PSU')
 a
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_psal_', p_val, '.png'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_psal_', p_val, '.png'),
        scale = .8,height = 4, width = 7.25)
 ggsave(plot = a,
-       filename =  paste0('analysis/images/mean_one_stage/rg_compare_psal_', p_val, '_eps.eps'),
+       filename =  paste0('analysis/images/mean_estimation/rg_compare_psal_', p_val, '_eps.eps'),
        scale = .8,height = 4, width = 7.25)

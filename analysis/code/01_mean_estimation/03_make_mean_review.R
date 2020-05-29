@@ -23,11 +23,11 @@ pressure <- unique(pressure)
 pressure <- pressure[order(pressure)]
 density_list <- list()
 
-calc_files_temp <- list.files('analysis/results/mean_one_stage/', pattern = 'mean_one_stage_temp')
-calc_files_psal <- list.files('analysis/results/mean_one_stage/', pattern = 'mean_one_stage_psal')
+calc_files_temp <- list.files('analysis/results/mean_estimation/', pattern = 'mean_one_stage_temp')
+calc_files_psal <- list.files('analysis/results/mean_estimation/', pattern = 'mean_one_stage_psal')
 
 for (i in 1:length(calc_files_temp)) {
-  load(paste0('analysis/results/mean_one_stage/', calc_files_temp[i]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_temp[i]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   eval(parse(text=paste0('rm(', file, ')')))
@@ -43,7 +43,7 @@ for (i in 1:length(calc_files_temp)) {
     rowMeans(sapply(0:9, function(z) argofda::predict.local_function(y[[1]], p_vals = pressure, index = z)))
   })
 
-  load(paste0('analysis/results/mean_one_stage/', calc_files_psal[i]))
+  load(paste0('analysis/results/mean_estimation/', calc_files_psal[i]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   eval(parse(text=paste0('rm(', file, ')')))
@@ -93,5 +93,5 @@ avg_mean <- data.frame(temperature = unlist(temperature), salinity = unlist(sali
                        pressure)
 
 save(grid_used, avg_mean,
-     file = 'analysis/results/mean_one_stage/mean_review.RData')
+     file = 'analysis/results/mean_estimation/mean_review.RData')
 

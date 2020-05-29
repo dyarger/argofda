@@ -36,8 +36,8 @@ coefs_pc_temp <- coefs_pc_temp[!is.na(grid_merge$index)]
 grid_pc_temp <- grid_pc_temp[!is.na(grid_merge$index),]
 
 ### get mean files
-mean_files_temp <- list.files('analysis/results/mean_one_stage/', pattern = 'temp')
-mean_files_psal <- list.files('analysis/results/mean_one_stage/', pattern = 'psal')
+mean_files_temp <- list.files('analysis/results/mean_estimation/', pattern = 'temp')
+mean_files_psal <- list.files('analysis/results/mean_estimation/', pattern = 'psal')
 final_list <- list()
 
 delta <- 2
@@ -45,7 +45,7 @@ pressure_vec <- seq(10, 2000, by = delta)
 # for each mean file, do conditional simulations
 pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
   # load mean functions
-  load(paste0('analysis/results/mean_one_stage/', mean_files_temp[j]))
+  load(paste0('analysis/results/mean_estimation/', mean_files_temp[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   temp_funs <- lapply(now, function(x) {
@@ -56,7 +56,7 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
     }
   })
   eval(parse(text=paste0('rm(', file, ')')))
-  load(paste0('analysis/results/mean_one_stage/', mean_files_psal[j]))
+  load(paste0('analysis/results/mean_estimation/', mean_files_psal[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file)))
   psal_funs <- lapply(now, function(x) {
