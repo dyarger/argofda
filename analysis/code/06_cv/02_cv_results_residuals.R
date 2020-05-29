@@ -169,6 +169,56 @@ points(residual_summary_coverage_delayed$pgroup, residual_summary_coverage_delay
 legend('bottomright', c('Temperature', 'Salinity'), pch = c(1,2), pt.cex = c(.7, .7))
 dev.off()
 
+## QQ plots
+prob_vals <- seq(.01, .99, by = .005)
+residual_summary_quantiles <- residuals %>%
+  select(-mode) %>%
+  mutate(pgroup = round(pressure/50)*50,
+                norm_temp_resid = temp_residual/sqrt(var_values_temp + nugget_var_temp)) %>%
+  group_by(pgroup) %>%
+  summarise(x=list(tibble::enframe(quantile(norm_temp_resid, probs=prob_vals,
+                                                        na.rm = T), "quantiles", "resid"))) %>%
+                tidyr::unnest(x) %>%
+  mutate(quantiles = readr::parse_number(quantiles))
+normal_quantiles <- data.frame(quantiles = prob_vals*100,
+                               norm_values = qnorm(p = prob_vals))
+residual_summary_quantiles <- merge(residual_summary_quantiles, normal_quantiles)
+residual_summary_quantiles$resid_diff <- residual_summary_quantiles$resid - residual_summary_quantiles$norm_values
+ggplot(data = residual_summary_quantiles,
+       aes(x = norm_values, y = resid_diff, group = pgroup, color = pgroup))+
+  geom_line()+
+  coord_cartesian(ylim = c(-1.2, 1.2))+
+  scale_color_viridis_c()+theme_bw() +
+  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile - Theoretical Normal Quantile',
+       color = 'Pressure\nGroup')
+ggsave(file = 'analysis/images/cv/qq_temp.png',
+       scale = .8,height = 6, width = 7.25)
+
+
+# QQ salinity
+residual_summary_quantiles_delayed <- residuals %>%
+  mutate(pgroup = round(pressure/50)*50,
+         norm_temp_resid = psal_residual/sqrt(var_values_psal + nugget_var_psal)) %>%
+  group_by(pgroup, mode) %>%
+  summarise(x=list(tibble::enframe(quantile(norm_temp_resid, probs=prob_vals,
+                                            na.rm = T), "quantiles", "resid"))) %>%
+  tidyr::unnest(x) %>%
+  mutate(quantiles = readr::parse_number(quantiles)) %>%
+  ungroup() %>% filter(mode == 'D')
+normal_quantiles <- data.frame(quantiles = prob_vals*100,
+                               norm_values = qnorm(p = prob_vals))
+residual_summary_quantiles_delayed <- merge(residual_summary_quantiles_delayed, normal_quantiles)
+residual_summary_quantiles_delayed$resid_diff <- residual_summary_quantiles_delayed$resid - residual_summary_quantiles_delayed$norm_values
+ggplot(data = residual_summary_quantiles_delayed,
+       aes(x = norm_values, y = resid_diff, group = pgroup, color = pgroup))+
+  geom_line()+
+  coord_cartesian(ylim = c(-1.2, 1.2))+
+  scale_color_viridis_c()+theme_bw() +
+  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile - Theoretical Normal Quantile',
+       color = 'Pressure\nGroup')
+ggsave(file = 'analysis/images/cv/qq_psal.png',
+       scale = .8,height = 6, width = 7.25)
+
 ### space comparison 0-20 dbar
 residual_loc_summary <- residuals %>%
   filter(pressure <20) %>%
