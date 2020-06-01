@@ -32,12 +32,11 @@ for (j in 1:length(calc_files)) {
   info <- lapply(cv_results, function(x) x[[7]][2])
 
   cond_var_old_scores <- lapply(cv_results, function(x) x[[4]])
-  final_list[[j]] <- list(mode, residuals,
-                          temp_results, psal_results,
-                          cond_var_old_scores,
-                          profile_nums,
-                          info,n_delayed,
-                          no_pred)
+  final_list[[j]] <- list(mode[!no_pred], residuals[!no_pred],
+                          temp_results[!no_pred], psal_results[!no_pred],
+                          cond_var_old_scores[!no_pred],
+                          profile_nums[!no_pred],
+                          info[!no_pred],n_delayed[!no_pred])
   print(j)
 }
 residuals <- lapply(final_list, function(x) x[[2]])
