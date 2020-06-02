@@ -63,24 +63,27 @@ residual_summary <- residuals %>%
   select(-mode, - profile_num) %>%
   mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
   group_by(pgroup) %>%
-  summarise_all(list(function(z) sqrt(mean(z^2, na.rm = T))))
+  summarise_all(list(function(z) sqrt(mean(z^2, na.rm = T)))) %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
 residual_summary_delayed <- residuals %>%
   select(-profile_num) %>%
   mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
   group_by(pgroup, mode) %>%
   summarise_all(list(function(z) sqrt(mean(z^2, na.rm = T)))) %>%
-  filter(mode == 'D')
+  filter(mode == 'D') %>%
+  ungroup() %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
 
 cex <- .8
 png('analysis/images/cv/temp_interpolation_comparison.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(as.numeric(as.character(residual_summary$pgroup)), residual_summary$temp_mean_residual, cex = cex,
+plot(residual_summary$pgroup, residual_summary$temp_mean_residual, cex = cex,
      xlab = 'Pressure', ylab = 'RMSE of Residuals', ylim = c(0, 1.3),
      cex.lab = 1.8,cex.axis = 1.8)
 points(rg_levels, apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))),
        col = 2, cex = cex, pch = 20)
-points(as.numeric(as.character(residual_summary$pgroup)), residual_summary$temp_residual,
+points(residual_summary$pgroup, residual_summary$temp_residual,
        col = 3, cex = cex, pch = 3)
 points(rg_levels, apply(temp_summary, 2, function(x)sqrt(mean(x^2, na.rm = T))),
        col = 4, cex = cex, pch = 4)
@@ -95,12 +98,12 @@ dev.off()
 png('analysis/images/cv/psal_interpolation_comparison.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(as.numeric(as.character(residual_summary_delayed$pgroup)), residual_summary_delayed$psal_mean_residual, cex = cex,
+plot(residual_summary_delayed$pgroup, residual_summary_delayed$psal_mean_residual, cex = cex,
      xlab = 'Pressure', ylab = 'RMSE of Residuals', ylim = c(0, .23),
      cex.lab = 1.8,cex.axis = 1.8)
 points(rg_levels, apply(psal_mean_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2, function(x) sqrt(mean(x^2, na.rm = T))),
        col = 2, cex = cex, pch = 20)
-points(as.numeric(as.character(residual_summary_delayed$pgroup)), residual_summary_delayed$psal_residual,
+points(residual_summary_delayed$pgroup, residual_summary_delayed$psal_residual,
        col = 3, cex = cex, pch = 3)
 points(rg_levels, apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2, function(x)sqrt(mean(x^2, na.rm = T))),
        col = 4, cex = cex, pch = 4)
@@ -111,21 +114,131 @@ legend('topright', c('Raw Mean Values', 'Interp Mean Values', 'Raw Pred Values '
        pt.bg = c(NA, 2, NA, NA))
 dev.off()
 
+##########
+
+cex <- 1
+# RMSE
+png('analysis/images/cv/temp_pred_error_comparison_RMSE.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary$pgroup, y = residual_summary$temp_mean_residual, cex = cex - .5,xlim = c(0,2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'RMSE Residuals' , ylim = c(0, max(residual_summary$temp_mean_residual)))
+points(residual_summary$pgroup,residual_summary$temp_residual, pch = 2, cex =cex - .5)
+points(c(10, 300, 1500), c(.5072, .5124, .0883),pch = 3, cex = cex, col = 2)
+points(c(10, 300, 1500), c(.8889, .8149, .1337),pch = 4, cex = cex, col = 3)
+points(c(10, 300, 1500), c(.6135, .5782, .1014),pch = 5, cex = cex, col = 4)
+legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex, cex, cex),
+       col = c(1,1,2,3,4),
+       cex = 1.8,
+       pch = 1:5)
+dev.off()
+residual_summary$temp_mean_residual[residual_summary$pgroup %in% c(10, 300, 1500)]
+residual_summary$temp_residual[residual_summary$pgroup %in% c(10, 300, 1500)]
+
+png('analysis/images/cv/psal_pred_error_comparison_RMSE.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary_delayed$pgroup, y = residual_summary_delayed$psal_mean_residual, cex = cex - .5,xlim = c(0, 2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'RMSE Residuals' ,
+     ylim = c(0, max(residual_summary_delayed$psal_mean_residual)))
+points(residual_summary_delayed$pgroup,residual_summary_delayed$psal_residual, pch = 2, cex =cex -.5)
+legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), pch = 1:2,
+       cex = 1.8,
+       col = rep(1, 2))
+dev.off()
+
+# median
 residual_summary <- residuals %>%
-  select(pressure, temp_residual) %>%
+  select(-mode, - profile_num) %>%
   mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
   group_by(pgroup) %>%
-  summarise_all(list(function(z) median(abs(z), na.rm = T)))
+  summarise_all(list(function(z) median(abs(z), na.rm = T))) %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
+residual_summary_delayed <- residuals %>%
+  select(-profile_num) %>%
+  mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
+  group_by(pgroup, mode) %>%
+  summarise_all(list(function(z) median(abs(z), na.rm = T))) %>%
+  filter(mode == 'D') %>%
+  ungroup() %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
 
-as.data.frame(residual_summary)
 
+png('analysis/images/cv/temp_pred_error_comparison_median.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary$pgroup, y = residual_summary$temp_mean_residual, cex = cex - .5,xlim = c(0,2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' , ylim = c(0, max(residual_summary$temp_mean_residual)))
+points(residual_summary$pgroup,residual_summary$temp_residual, pch = 2, cex =cex - .5)
+points(c(10, 300, 1500), c(.1801, .1740, .0311),pch = 3, cex = cex, col = 2)
+points(c(10, 300, 1500), c(.4750, .3062, .0530),pch = 4, cex = cex, col = 3)
+points(c(10, 300, 1500), c(.2556, .1991, .0356),pch = 5, cex = cex, col = 4)
+legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex, cex, cex),
+       col = c(1,1,2,3,4),
+       cex = 1.8,
+       pch = 1:5)
+dev.off()
+residual_summary$temp_mean_residual[residual_summary$pgroup %in% c(10, 300, 1500)] # 0.31928370 0.34936718 0.06200045
+residual_summary$temp_residual[residual_summary$pgroup %in% c(10, 300, 1500)] # 0.19777220 0.17268008 0.03760884
+
+png('analysis/images/cv/psal_pred_error_comparison_median.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary_delayed$pgroup, y = residual_summary_delayed$psal_mean_residual, cex = cex - .5,xlim = c(0, 2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' ,
+     ylim = c(0, max(residual_summary_delayed$psal_mean_residual)))
+points(residual_summary_delayed$pgroup,residual_summary_delayed$psal_residual, pch = 2, cex =cex -.5)
+legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), pch = 1:2,
+       cex = 1.8,
+       col = rep(1, 2))
+dev.off()
+
+
+# Q3
 residual_summary <- residuals %>%
-  select(pressure, temp_residual) %>%
+  select(-mode, - profile_num) %>%
   mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
   group_by(pgroup) %>%
-  summarise_all(list(function(z) quantile(abs(z), probs = .75, na.rm = T)))
+  summarise_all(list(function(z) quantile(abs(z), probs = .75, na.rm = T))) %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
+residual_summary_delayed <- residuals %>%
+  select(-profile_num) %>%
+  mutate(pgroup = base::cut(x = pressure, breaks = c(0,midpoints_RG, Inf), labels = rg_levels, include.lowest = T)) %>%
+  group_by(pgroup, mode) %>%
+  summarise_all(list(function(z) quantile(abs(z), probs = .75, na.rm = T))) %>%
+  filter(mode == 'D') %>%
+  ungroup() %>%
+  mutate(pgroup = as.numeric(as.character(pgroup)))
 
-as.data.frame(residual_summary[, c('pressure', 'temp_residual')])
+
+png('analysis/images/cv/temp_pred_error_comparison_Q3.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary$pgroup, y = residual_summary$temp_mean_residual, cex = cex - .5,xlim = c(0,2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Q3 of Absolute Residuals' , ylim = c(0, max(residual_summary$temp_mean_residual)))
+points(residual_summary$pgroup,residual_summary$temp_residual, pch = 2, cex =cex - .5)
+points(c(10, 300, 1500), c(.3735, .3684, .0641),pch = 3, cex = cex, col = 2)
+points(c(10, 300, 1500), c(.8670, .6320, .1043),pch = 4, cex = cex, col = 3)
+points(c(10, 300, 1500), c(.5026, .4213, .0736),pch = 5, cex = cex, col = 4)
+legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex, cex, cex),
+       col = c(1,1,2,3,4),
+       cex = 1.8,
+       pch = 1:5)
+dev.off()
+residual_summary$temp_mean_residual[residual_summary$pgroup %in% c(10, 300, 1500)] #  0.6247356 0.6845067 0.1160059
+residual_summary$temp_residual[residual_summary$pgroup %in% c(10, 300, 1500)] # 0.39716038 0.36660264 0.07236247
+
+png('analysis/images/cv/psal_pred_error_comparison_Q3.png',
+    width =1200, height = 800, res = 144)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+plot(x = residual_summary_delayed$pgroup, y = residual_summary_delayed$psal_mean_residual, cex = cex - .5,xlim = c(0, 2000),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Q3 of Absolute Residuals' ,
+     ylim = c(0, max(residual_summary_delayed$psal_mean_residual)))
+points(residual_summary_delayed$pgroup,residual_summary_delayed$psal_residual, pch = 2, cex =cex -.5)
+legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), pch = 1:2,
+       cex = 1.8,
+       col = rep(1, 2))
+dev.off()
 
 
 
