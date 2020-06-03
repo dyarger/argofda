@@ -1,3 +1,4 @@
+library(argofda)
 load('analysis/data/jan_march_residuals.RData')
 load('analysis/results/cv/cv_results_8.RData')
 profile_nums <- sapply(cv_results, function(x) x[[7]][1])
@@ -66,7 +67,7 @@ png('analysis/images/cv/cv_example_temp.png',  width = 400/72, height = 600/72,
    units = 'in', res = 144)
 min_val <- min(-r_x)
 max_val <- max(r_x)
-plot(residuals$temp_mean_residual,residuals$pressure, xlim = c(min_val, max_val),
+plot(residuals$temp_mean_residual,residuals$pressure, xlim = c(min_val- .5, max_val),
      ylab = 'Pressure', xlab = 'Temperature Residual (°C)', cex.lab = 1.5,cex.axis = 1.5,
      ylim=c(2000, 0))
 lines(y=0:2000,pred_values_temp + r_x,lty = 2)
@@ -74,9 +75,9 @@ lines(y=0:2000,pred_values_temp - r_x, lty = 2)
 lines(y=0:2000,lower_bound_temp, col = 2)
 lines(y=0:2000,upper_bound_temp, col = 2)
 lines(y=0:2000, pred_values_temp, cex = .5)
-legend('bottomleft',c('Observed', 'Prediction', '2 SD bound', '2 SD band'),
+legend('bottomleft',c('Observed', 'Prediction', '95.4% point\nprediction\nbound', '95.4%\nprediction\nband'),
        lty = c(NA, 1, 1, 2), col = c(1, 1,2,1), pch = c(1, NA, NA, NA),
-       pt.cex = c(.5, NA, NA, NA), cex = 1.2)
+       pt.cex = c(1, NA, NA, NA), cex = 1.2, y.intersp = 2)
 dev.off()
 
 png('analysis/images/cv/cv_example_psal.png', width = 400/72, height = 600/72,
@@ -91,8 +92,8 @@ lines(y=0:2000,pred_values_psal - r_x_psal, lty = 2)
 lines(y=0:2000,lower_bound_psal, col = 2)
 lines(y=0:2000,upper_bound_psal, col = 2)
 lines(y=0:2000, pred_values_psal, cex = .5)
-legend('bottomleft',c('Observed', 'Prediction', '2 SD bound', '2 SD band'),
-       lty = c(NA, 1, 1, 2), col = c(1, 1,2,1), pch = c(1, NA, NA, NA),
-       pt.cex = c(.5, NA, NA, NA), cex = 1.2)
+# legend('bottomleft',c('Observed', 'Prediction', '95.4% point prediction bound', '95.4% point prediction band'),
+#        lty = c(NA, 1, 1, 2), col = c(1, 1,2,1), pch = c(1, NA, NA, NA),
+#        pt.cex = c(.5, NA, NA, NA), cex = 1.2)
 dev.off()
 
