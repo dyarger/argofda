@@ -8,7 +8,7 @@
 #' @param specify_cor if FALSE, rho is not used and gives diagonal matrix
 #'
 #' @return tridiagonal sparse matrix of weights to use in the fit
-#' 
+#'
 #' @export
 construct_working_cov <- function(p, weights, profile, rho, specify_cor) {
   prof_lengths <- aggregate(weights, list(profile), length)
@@ -37,13 +37,13 @@ construct_working_cov <- function(p, weights, profile, rho, specify_cor) {
 #' @param Y response vector
 #'
 #' @return list of matrices
-#' U - Phi_all^T W Phi_all  
+#' U - Phi_all^T W Phi_all
 #' V - Phi_all^T W Y
 #' Omega - penalty matrix for all covariates
 #' the solution is (U + Omega)^(-1) V
 #' reorder - signifies how the basis functions were reordered to yield sparse matrices
 #' Phi_all - basis matrix for all covariates
-#' 
+#'
 #' @export
 model_set_up <- function(covariates, lambdas, Phi, Psi, W, Y) {
   covariates <- as.matrix(covariates)
@@ -72,7 +72,7 @@ model_set_up <- function(covariates, lambdas, Phi, Psi, W, Y) {
 #' Uses golden section/quadratic search to choose amount of smoothing
 #'
 #' @param U matrix of covariates used in the fit; a single column of 1s will give a simple smoothing spline estimate
-#' @param V vector of length ncol(covariates) that specifies initial lambda for each covariate
+#' @param V Phi_all^T W Y
 #' @param W weight matrix created by construct_working_cov
 #' @param Omega penalty matrix
 #' @param Y response vector
@@ -88,10 +88,10 @@ model_set_up <- function(covariates, lambdas, Phi, Psi, W, Y) {
 #' 2: knots - knots used for basis
 #' 3: cv_info - cross validation summary information
 #' 4: lambda_chosen - lambda_chosen by cross validation
-#' 
+#'
 #' @export
 complete_optim <- function(U, V, W, Omega, Y, Phi_all,
-                           lower_optim, upper_optim, tol = 1e-03, selection_vector, 
+                           lower_optim, upper_optim, tol = 1e-03, selection_vector,
                            knots, n_basis) {
   the_trace <- sum(Matrix::diag(Omega)) / sum(Matrix::diag(U))
   cv_info <- capture.output(l_opt <- optimise(f = gcv_fun,
@@ -104,7 +104,7 @@ complete_optim <- function(U, V, W, Omega, Y, Phi_all,
   beta <- Matrix::solve(the_chol_LL, V, system = 'A')
   beta <- beta[order(selection_vector)]
   beta <- split(beta, rep(1:(ncol(Phi_all)/n_basis), each = n_basis))
-  
+
   # organize cv information
   cv_info <- data.frame(do.call(rbind, strsplit(cv_info, split = '\\s+'))[,2:5],
                         stringsAsFactors = FALSE)
