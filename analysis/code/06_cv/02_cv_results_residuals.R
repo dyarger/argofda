@@ -147,18 +147,21 @@ residuals$in_interval_temp <- ifelse(residuals$temp_mean_residual <= upper_bound
 residuals$in_interval_psal <- ifelse(residuals$psal_mean_residual <= upper_bound_psal &
                                        residuals$psal_mean_residual >= lower_bound_psal,
                                      1, 0)
+mean(residuals$in_interval_temp)
+mean(residuals$in_interval_psal[residuals$mode == 'D'])
 
 residual_summary_coverage <- residuals %>%
   select(-mode) %>%
   mutate(pgroup = round(pressure/20)*20) %>%
   group_by(pgroup) %>%
-  summarise_all(list(function(z) mean(z, na.rm = T)))
+  summarise(in_interval_temp = mean(in_interval_temp, na.rm = T))
 residual_summary_coverage_delayed <- residuals %>%
   mutate(pgroup = round(pressure/20)*20) %>%
   group_by(pgroup, mode) %>%
-  summarise_all(list(function(z) mean(z, na.rm = T))) %>%
+  summarise(in_interval_psal = mean(in_interval_psal, na.rm = T)) %>%
   ungroup() %>% filter(mode == 'D')
 png('analysis/images/cv/one_stage_coverage_both.png', width =900, height = 600, res = 144)
+par(mar=c(5.1-1, 4.1, 4.1-3, 2.1-1))
 plot(residual_summary_coverage$pgroup, residual_summary_coverage$in_interval_temp, cex = .7, # ylim = c(-.05, .05),
      ylab = 'Pointwise Coverage', xlab = 'Pressure (dbar)',
      ylim = c(.8, 1))

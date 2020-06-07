@@ -41,14 +41,14 @@ var_values_psal <- diag(as.matrix(pc_vals_psal %*% cond_var[(K1+1):(K1 + K2), (K
 
 load('analysis/results/nugget_variance/nugget_var_40000.RData')
 nugget_single <- Grid_Pred40000[[267]]
-var_pred_temp_out <- exp(predict(nugget_single[[1]], 0:2000))
-var_pred_psal_out <- exp(predict(nugget_single[[2]], 0:2000))
+var_pred_temp_out <- exp(predict(nugget_single[[1]], 0:2000))/(1/2*exp(digamma(1)))
+var_pred_psal_out <- exp(predict(nugget_single[[2]], 0:2000))/(1/2*exp(digamma(1)))
 
 lower_bound_temp <- pred_values_temp -2*sqrt(var_values_temp+var_pred_temp_out)
 upper_bound_temp <- pred_values_temp +2*sqrt(var_values_temp+var_pred_temp_out)
 
-lower_bound_psal <- pred_values_psal -2*sqrt(var_values_psal + var_pred_psal_out)
-upper_bound_psal <- pred_values_psal +2*sqrt(var_values_psal+ var_pred_psal_out)
+lower_bound_psal <- pred_values_psal -2*sqrt(var_values_psal+var_pred_psal_out)
+upper_bound_psal <- pred_values_psal +2*sqrt(var_values_psal+var_pred_psal_out)
 
 quantile_all <- .95
 
@@ -61,7 +61,7 @@ r_x = sqrt(single_results[[1]][[3]]* rowSums(sapply(1:K1, function(x) {
 
 r_x_psal = sqrt(single_results[[2]][[3]]* rowSums(sapply(1:K2, function(x) {
   single_results[[2]][[4]][x]^2 * pc_vals_psal[,x]^2})) +
-    abs(qnorm(p = (1-quantile)/nrow(residuals)/2 ) )^2 *var_pred_psal_out)
+    abs(qnorm(p = (1-quantile)/nrow(residuals)/2 ) )^2 * var_pred_psal_out)
 
 png('analysis/images/cv/cv_example_temp.png',  width = 400/72, height = 600/72,
    units = 'in', res = 144)
