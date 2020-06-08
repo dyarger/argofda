@@ -113,8 +113,10 @@ ggplot()+
   map_plot +
   scale_fill_gradientn(limits = c(-.9, .9), colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (PSU)')
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_psal_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_psal_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_psal_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_psal_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
@@ -126,8 +128,10 @@ ggplot()+
   scale_fill_gradientn(limits = c(-.55, .55), values = scales::rescale(c(-.4,-.25, -.1, 0, .1,.25,.4)),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (PSU)')
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_psal_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_psal_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_psal_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_psal_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
@@ -140,8 +144,10 @@ a <- ggplot()+
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (PSU)')
 a
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_psal_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_psal_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_psal_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_psal_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
@@ -167,8 +173,10 @@ ggplot()+
   scale_fill_gradientn(limits = c(x_min, x_max), values = scales::rescale(c(x_min,-2, 0,2, x_max)),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (°C)')
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_temp_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_temp_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_temp_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[1], '_temp_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
@@ -184,8 +192,10 @@ ggplot()+
   scale_fill_gradientn(limits = c(x_min, x_max), values = scales::rescale(c(x_min,-2, 0,2, x_max)),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (°C)')
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_temp_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_temp_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_temp_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_temp_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 
@@ -199,8 +209,10 @@ ggplot()+
   scale_fill_gradientn(limits = c(x_min, x_max), values = scales::rescale(c(x_min, -.5, 0,.5, x_max)),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Pred (°C)')
-ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_temp_', year, '.png'),
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_temp_', year, '_large.png'),
        scale = .8,height = 4, width = 7.25)
+ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_temp_', year, '.png'),
+       scale = .8,height = 4, width = 7.25, dpi = 200)
 ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[3], '_temp_', year, '.eps'),
        scale = .8,height = 4, width = 7.25)
 

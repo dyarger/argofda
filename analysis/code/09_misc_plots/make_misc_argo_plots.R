@@ -25,7 +25,8 @@ g <- ggplot() +
         legend.position = 'bottom',
         legend.title = element_text(size = 13))
 g
-ggsave(filename = 'analysis/images/misc/profile_locations.png', g, height = 4, width = 6)
+ggsave(filename = 'analysis/images/misc/profile_locations_large.png', g, height = 4, width = 6)
+ggsave(filename = 'analysis/images/misc/profile_locations.png', g, height = 4, width = 6,dpi = 200)
 ggsave(filename = 'analysis/images/misc/profile_locations.eps',
        g, height = 4, width = 6)
 

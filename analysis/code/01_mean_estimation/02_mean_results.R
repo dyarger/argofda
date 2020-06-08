@@ -3,7 +3,7 @@ library(ggplot2)
 library(viridis)
 library(argofda)
 library(dplyr)
-type <- 'temp'
+type <- 'psal'
 label <- c('Temperature', 'Salinity')[c('temp', 'psal') == type]
 label_units <- c('Temp (°C)', 'PSU')[c('temp', 'psal') == type]
 color_scale <- list(c(-2, 32),c(30, 38))[[which(c('temp', 'psal') == type)]]
@@ -127,6 +127,8 @@ ggplot(data = pred_vals_long[pred_vals_long$year %in% c('2010', '2013', 'Avg'),]
   labs(x = 'Pressure (decibars)', y = label_units,color = 'Function')+
   theme(legend.position = 'bottom')
 ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_example_', long_example, '_', lat_example, '.png'),
+       scale = 1.2, height = 5, width = 3.75, dpi = 150)
+ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_example_', long_example, '_', lat_example, '_large.png'),
        scale = 1.2, height = 5, width = 3.75, dpi = 600)
 
 # extrapolate local linear day function
@@ -364,9 +366,11 @@ ggplot()+
        color = paste0('Gradient\nLength\n(', label_units,  '/100km)'),
        fill = paste0('Gradient\nLength\n(', label_units,  '/100km)'))
 ggsave(filename = paste0('analysis/images/mean_estimation/deriv_', type, '_', p_val, '.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h*1.3, width = h*1.4, dpi = 100)
+ggsave(filename = paste0('analysis/images/mean_estimation/deriv_', type, '_', p_val, '_large.png'),
+       scale = .8,height = h*1.3, width = h*1.4, dpi = 400)
 ggsave(filename = paste0('analysis/images/mean_estimation/deriv_', type, '_', p_val, '.eps'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h*1.3, width = h*1.4)
 
 
 

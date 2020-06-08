@@ -188,13 +188,13 @@ residual_summary_quantiles <- merge(residual_summary_quantiles, normal_quantiles
 residual_summary_quantiles$resid_diff <- residual_summary_quantiles$resid - residual_summary_quantiles$norm_values
 ggplot(data = residual_summary_quantiles,
        aes(x = norm_values, y = resid_diff, group = pgroup, color = pgroup))+
-  geom_line()+
+  geom_line(size = .2)+
   coord_cartesian(ylim = c(-1.2, 1.2))+
-  scale_color_viridis_c()+theme_bw() +
-  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile - Theoretical Normal Quantile',
+  scale_color_viridis_c()+theme_bw() + theme(text = element_text(size = 9)) +
+  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile Minus\n Theoretical Normal Quantile',
        color = 'Pressure\nGroup')
 ggsave(file = 'analysis/images/cv/qq_temp.png',
-       scale = .8,height = 6, width = 7.25)
+       scale = .8,height = 6/2, width = 7.25/2)
 
 
 # QQ salinity
@@ -213,13 +213,13 @@ residual_summary_quantiles_delayed <- merge(residual_summary_quantiles_delayed, 
 residual_summary_quantiles_delayed$resid_diff <- residual_summary_quantiles_delayed$resid - residual_summary_quantiles_delayed$norm_values
 ggplot(data = residual_summary_quantiles_delayed,
        aes(x = norm_values, y = resid_diff, group = pgroup, color = pgroup))+
-  geom_line()+
+  geom_line(size = .2)+
   coord_cartesian(ylim = c(-1.2, 1.2))+
-  scale_color_viridis_c()+theme_bw() +
-  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile - Theoretical Normal Quantile',
+  scale_color_viridis_c()+theme_bw() + theme(text = element_text(size = 9)) +
+  labs(x = 'Theoretical Normal Quantile', y = 'Empirical Quantile Minus\n Theoretical Normal Quantile',
        color = 'Pressure\nGroup')
 ggsave(file = 'analysis/images/cv/qq_psal.png',
-       scale = .8,height = 6, width = 7.25)
+       scale = .8,height = 6/2, width = 7.25/2)
 
 ### space comparison 0-20 dbar
 residual_loc_summary <- residuals %>%

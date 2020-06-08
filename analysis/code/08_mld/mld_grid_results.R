@@ -54,7 +54,7 @@ a <- ggplot(data = mld_avg, aes(x = long_p, y = lat, fill = mean))+
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_var_dens_mean_mean.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, units = 'in', dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_var_dens_mean_mean.eps',
        scale = .8,height = h, width = 7.25)
@@ -70,7 +70,7 @@ a <- ggplot(data = mld_avg,
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_median_mean.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_median_mean.eps'),
        scale = .8,height = h, width = 7.25)
@@ -84,7 +84,7 @@ a <- ggplot(data = mld_avg,
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_80_mean.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_80_mean.eps'),
        scale = .8,height = h, width = 7.25)
@@ -98,7 +98,7 @@ a <- ggplot(data = mld_avg,
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_70_mean.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_70_mean.eps'),
        scale = .8,height = h, width = 7.25)
@@ -117,7 +117,7 @@ a <- ggplot(data = mld_avg,
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_90_range_mean.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_90_range_mean.eps'),
        scale = .8,height = h, width = 7.25)
@@ -138,7 +138,7 @@ a <- ggplot(data =mld_df[mld_df$year == year,],
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_mean_', year, '.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_mean_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
@@ -153,7 +153,7 @@ a <- ggplot(data =mld_df[mld_df$year == year,],
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_median_', year, '.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_median_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
@@ -172,7 +172,7 @@ a <- ggplot(data = mld_df[mld_df$year == mld_df$year,],
 a
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_90_range_', year, '.png'),
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = paste0('analysis/images/mld/mld_var_dens_90_range_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
@@ -205,7 +205,7 @@ a <- ggplot(data = mld_da_df, aes(x = ifelse(long < 0, long + 360, long), y = la
   labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_algo.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_algo.eps',
        scale = .8,height = h, width = 7.25)
@@ -220,7 +220,7 @@ a <- ggplot(data = mld_dt_df, aes(x = ifelse(long < 0, long + 360, long), y = la
 a
 ggsave(plot = a,
        filename =  'analysis/images/mld/scr_mld_density_thresh.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_thresh.eps',
        scale = .8,height = h, width = 7.25)
@@ -235,7 +235,7 @@ a <- ggplot(data = mld_dt_std, aes(x = ifelse(long < 0, long + 360, long), y = l
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_algo_sd.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_algo_sd.eps',
        scale = .8,height = h, width = 7.25)
@@ -249,7 +249,7 @@ a <- ggplot(data = mld_da_std, aes(x = ifelse(long < 0, long + 360, long), y = l
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_thresh_sd.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/scr_mld_density_thresh_sd.eps',
@@ -268,7 +268,7 @@ a <- ggplot(data = mld_all, aes(x = long_p, y = lat,  fill = (mld_var - mean)/ml
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_relative_thresh.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_relative_thresh.eps',
        scale = .8,height = h, width = 7.25)
@@ -284,7 +284,7 @@ a <- ggplot(data = mld_all, aes(x = long_p, y = lat,  fill = (mld_var - mean)/ml
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_relative_algo.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_relative_algo.eps',
        scale = .8,height = h, width = 7.25)
@@ -301,7 +301,7 @@ a <- ggplot(data = mld_all, aes(x = mld_var, y = mean))+
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_line_algo.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_comparison_line_also.eps',
        scale = .8,height = h, width = 7.25)
@@ -319,20 +319,9 @@ a <- ggplot(data = mld_all, aes(x = long_p, y = lat, fill = sd))+
 a
 ggsave(plot = a,
        filename = 'analysis/images/mld/mld_var_dens_sd_mean.png',
-       scale = .8,height = h, width = 7.25)
+       scale = .8,height = h, width = 7.25, dpi = 200)
 ggsave(plot = a,
        filename ='analysis/images/mld/mld_var_dens_sd_mean.eps',
        scale = .8,height = h, width = 7.25)
 
-mld_all <- full_join(mld_avg, mld_dt_df, by = c('long', 'lat'))
-mld_all$lower <- mld_all$mean - 2 * mld_all$sd
-mld_all$upper <- mld_all$mean + 2 * mld_all$sd
-a <- ggplot(data = mld_all, aes(x = ifelse(long < 0, long + 360, long), y = lat,
-                                fill = factor(ifelse(mld_var <= lower, -1,
-                                              ifelse(mld_var >= upper, 1, 0)))))+
-  geom_raster()+
-  scale_fill_manual(values = c(scales::muted('blue'), 'white', scales::muted('red')), na.value = 'gray')+
-  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
-  map_plot +
-  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
-a
+

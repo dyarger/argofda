@@ -34,7 +34,8 @@ ggplot()+
   scale_fill_gradientn(limits = c(-2.5,2.5), colours = c("blue", "white", "red"),
                        values = scales::rescale(c(-2.5, -1, 0,1, 2.5)))+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Fun-KS (°C)')
-ggsave(filename = 'analysis/images/joint_TS_20/anomaly_10_compare_KS.png', scale = .8,height = 4, width = 7.25)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_10_compare_KS.png', scale = .8,height = 4, width = 7.25,dpi = 150)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_10_compare_KS_large.png', scale = .8,height = 4, width = 7.25)
 ggsave(filename = 'analysis/images/joint_TS_20/anomaly_10_compare_KS.eps', scale = .8,height = 4, width = 7.25)
 
 # 300 decibars
@@ -58,7 +59,8 @@ ggplot()+
   scale_fill_gradientn(limits = c(-3,3), colours = c("blue", "white", "red"),
                        values = scales::rescale(c(-2.5, -1, 0,1, 2.5)))+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Fun-KS (°C)')
-ggsave(filename = 'analysis/images/joint_TS_20/anomaly_300_compare_KS.png', scale = .8,height = 4, width = 7.25)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_300_compare_KS.png', scale = .8,height = 4, width = 7.25,dpi = 150)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_300_compare_KS_large.png', scale = .8,height = 4, width = 7.25)
 ggsave(filename = 'analysis/images/joint_TS_20/anomaly_300_compare_KS.eps', scale = .8,height = 4, width = 7.25)
 
 
@@ -83,5 +85,6 @@ ggplot()+
   scale_fill_gradientn(limits = c(-1,1), colours = c("blue", "white", "red"),
                        values = scales::rescale(c(-1, -.4, 0, .4, 1)))+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Fun-KS (°C)')
-ggsave(filename = 'analysis/images/joint_TS_20/anomaly_1500_compare_KS.png', scale = .8,height = 4, width = 7.25)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_1500_compare_KS.png', scale = .8,height = 4, width = 7.25,dpi = 150)
+ggsave(filename = 'analysis/images/joint_TS_20/anomaly_1500_compare_KS_large.png', scale = .8,height = 4, width = 7.25)
 ggsave(filename = 'analysis/images/joint_TS_20/anomaly_1500_compare_KS.eps', scale = .8,height = 4, width = 7.25)
