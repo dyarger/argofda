@@ -42,6 +42,7 @@ e_step_cv <- function(params_use, delayed, not_delayed, df_use,
   df_scores_new[paste0('N', 1:(K1 + K2), '_new')] <- new_scores
   return(df_scores_new)
 }
+setwd('/home/dyarger/argofda/')
 load('analysis/results/joint_TS_20/params.RData')
 source('analysis/code/05_nugget_variance/load_nugget.R')
 
@@ -53,8 +54,8 @@ library(fields)
 library(CompQuadForm)
 library(parallel)
 
-load('analysis/results/psal_one_stage_cov_pca.RData')
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/psal_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
@@ -108,10 +109,10 @@ cv <- function(profile_num, h_space, K1, K2) {
 
   # remove profiles that we can't get an accurate estimate of scores
   # these are either too short or have too few measurements
-  pressure_min <- df %>% group_by(profile) %>% summarise(min(pressure))
-  pressure_max <- df %>% group_by(profile) %>% summarise(max(pressure))
+  pressure_min <- df %>% group_by(profile) %>% summarise(min(pressure), .groups = "drop")
+  pressure_max <- df %>% group_by(profile) %>% summarise(max(pressure), .groups = "drop")
   short_profiles <- (1:nrow(pressure_max))[which(pressure_max[,2] - pressure_min[,2] < 800)]
-  prof_lengths <- df %>% group_by(profile) %>% summarise(n())
+  prof_lengths <- df %>% group_by(profile) %>% summarise(n(), .groups = "drop")
   small_profiles <-(1:nrow(prof_lengths))[which(prof_lengths[,2] < 15)]
   df <- df[!(df$profile %in% short_profiles) & !(df$profile %in% small_profiles),]
   df$profile <- as.numeric(as.factor(df$profile))
@@ -183,20 +184,27 @@ cv <- function(profile_num, h_space, K1, K2) {
   }
 
   # nugget variances
-  nugget_temp_out <- temp_nugget_funs[[which(grid_nugget$long == long_eval &
-                                              grid_nugget$lat == lat_eval)]]
-  nugget_psal_out <- psal_nugget_funs[[which(grid_nugget$long == long_eval &
-                                                grid_nugget$lat == lat_eval)]]
-  if (is.null(nugget_temp_out)) {
+  if (length(which(grid_nugget$long == long_eval &
+                   grid_nugget$lat == lat_eval)) == 0) {
     var_pred_temp_out <- rep(0, nrow(df_out))
     var_pred_psal_out <- rep(0, nrow(df_out))
-  } else if (is.null(nugget_psal_out)) {
-    var_pred_psal_out <- rep(0, nrow(df_out))
-    var_pred_temp_out <- exp(predict(nugget_temp_out, df_out$pressure))
   } else {
-    var_pred_temp_out <- exp(predict(nugget_temp_out, df_out$pressure))
-    var_pred_psal_out <- exp(predict(nugget_psal_out, df_out$pressure))
+    nugget_temp_out <- temp_nugget_funs[[which(grid_nugget$long == long_eval &
+                                                 grid_nugget$lat == lat_eval)]]
+    nugget_psal_out <- psal_nugget_funs[[which(grid_nugget$long == long_eval &
+                                                 grid_nugget$lat == lat_eval)]]
+    if (is.null(nugget_temp_out)) {
+      var_pred_temp_out <- rep(0, nrow(df_out))
+      var_pred_psal_out <- rep(0, nrow(df_out))
+    } else if (is.null(nugget_psal_out)) {
+      var_pred_psal_out <- rep(0, nrow(df_out))
+      var_pred_temp_out <- exp(predict(nugget_temp_out, df_out$pressure))
+    } else {
+      var_pred_temp_out <- exp(predict(nugget_temp_out, df_out$pressure))
+      var_pred_psal_out <- exp(predict(nugget_psal_out, df_out$pressure))
+    }
   }
+
 
   # AA^T estimate and form decorrelated scores
   AA_est <- matrix(nrow = K1 + K2, unlist(df_params_only[df_params_only$long == long_eval & df_params_only$lat == lat_eval,
@@ -423,8 +431,8 @@ indexes_list <- split(indexes, rep(1:40, length(profMonthAggr)))
 array_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
 a <- proc.time()
-cv_results <- mclapply(indexes_list[[array_id]],
-                       cv, h_space = 1100, mc.cores = 1,mc.preschedule = FALSE,
+cv_results <- lapply(indexes_list[[array_id]],
+                       cv, h_space = 1100,# mc.cores = 1,mc.preschedule = FALSE,
                        K1 = 10, K2 = 10)
 b <- proc.time()
 b-a

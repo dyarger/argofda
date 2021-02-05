@@ -3,6 +3,7 @@ library(gsw)
 library(fda)
 library(dplyr)
 library(argofda)
+setwd('/home/dyarger/argofda/')
 load('analysis/results/joint_TS_20/preds.RData') # conditional predictions
 source('analysis/code/08_mld/mld_source.R') # load mld funs
 
@@ -26,11 +27,11 @@ grid_to_compute <- grid_to_compute[(500*(array_id-1)+ 1):(500*array_id),]
 ### MLD ###
 
 # load pcs and only get the ones we need
-load('analysis/results/psal_one_stage_cov_pca.RData')
+load('analysis/results/psal_complete_cov_pca.RData')
 grid_merge <- left_join(grid_pc_psal, grid_to_compute)
 coefs_pc_psal <- coefs_pc_psal[!is.na(grid_merge$index)]
 grid_pc_psal <- grid_pc_psal[!is.na(grid_merge$index),]
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/temp_complete_cov_pca.RData')
 grid_merge <- left_join(grid_pc_temp, grid_to_compute)
 coefs_pc_temp <- coefs_pc_temp[!is.na(grid_merge$index)]
 grid_pc_temp <- grid_pc_temp[!is.na(grid_merge$index),]
@@ -79,9 +80,9 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
     # compute mean and pcs at pressure values
     index <- df_indexes[x, 'index']
     year <- df_indexes[x, 'year']
-    mean_temp_one <- predict(temp_funs[have_results_both][[
+    mean_temp_one <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007)
-    mean_psal_one <- predict(psal_funs[have_results_both][[
+    mean_psal_one <- predict.local_function(psal_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007)
     long <- df_indexes[x,'long']
     lat <- df_indexes[x,'lat']
@@ -96,9 +97,9 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
 
 
     # derivatives
-    mu_temp_deriv <- predict(temp_funs[have_results_both][[
+    mu_temp_deriv <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007, deriv = 1)
-    mu_psal_deriv <- predict(temp_funs[have_results_both][[
+    mu_psal_deriv <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007, deriv = 1)
     phi_deriv <- sapply(as.data.frame(as.matrix(pc)), function(z) {
       predict(make_fit_object(coefficients = z, knots = knots_pc),

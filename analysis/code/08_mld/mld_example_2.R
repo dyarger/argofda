@@ -1,0 +1,463 @@
+# MLD results
+get_mld <- list()
+lats <- c(-40.5, 45.5)
+longs <- c(-160.5, -20.5)
+for (j in 30:116) {
+  load(paste0('analysis/results/mld/mld_', j ,'.RData'))
+  locations <- final_list[[1]]
+  vals <- which((locations$long == longs[1] &
+                  locations$lat == lats[1] & locations$year == 2014) |
+                (locations$long == longs[2] &
+                   locations$lat == lats[2] & locations$year == 2014))
+  if (length(vals) == 0 ) {
+    get_mld[[j]] <- NULL
+    print(j)
+  } else {
+    get_mld[[j]] <- final_list[[2]][[vals]]
+  }
+}
+
+vals <- do.call(rbind, get_mld)
+
+vals1 <- vals[1,1][[1]][,1]
+vals2 <- vals[2,1][[1]][,1]
+
+df <- data.frame('location' = rep(c(1,2), each = length(vals1)),
+                 vals = c(vals1, vals2))
+library(ggplot2)
+
+ggplot(data = df, aes(x = vals))+
+  geom_histogram() +
+  facet_wrap(~location, ncol = 1)
+
+save(get_mld, file = 'analysis/results/mld/mld_grid_summaries_max.RData')
+q()
+
+library(ggplot2)
+library(RColorBrewer)
+library(colorRamps)
+library(ncdf4)
+library(dplyr)
+load('analysis/results/mld/mld_grid_summaries_max.RData')
+theme_set(theme_bw() + theme(panel.grid = element_blank(), text = element_text(size = 15),
+                             legend.position = 'bottom',legend.text = element_text(size = 10)))
+
+locations <- do.call(rbind, lapply(get_mld, function(x) x[[1]]))
+mld_quantiles <- unlist(lapply(get_mld, function(x) x[[2]]), recursive = F)
+mld_var_dens_quan <- do.call(rbind, lapply(mld_quantiles, function(x) t(x)[1,]))
+colnames(mld_var_dens_quan) <- paste0('quant_', c(.025, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, .975))
+mld_var_dens_mean <- unlist(lapply(get_mld, function(x) x[[3]]), recursive = F)
+mld_var_dens_mean <- do.call(c, lapply(mld_var_dens_mean, function(x) x[1]))
+mld_var_dens_sd <- unlist(lapply(get_mld, function(x) x[[4]]), recursive = F)
+mld_var_dens_sd <- do.call(c, lapply(mld_var_dens_sd, function(x) x[1]))
+mld_max <- unlist(lapply(get_mld, function(x) x[[5]]), recursive = F)
+mld_max <- do.call(c, lapply(mld_max, function(x) x[1]))
+mld_df <- data.frame(locations, mld_var_dens_quan, mean = mld_var_dens_mean,
+                     sd = mld_var_dens_sd, mld_max)
+mld_df$long_p <- ifelse(mld_df$long < 0, mld_df$long + 360, mld_df$long)
+
+mld_avg <- mld_df %>%
+  group_by(long, lat) %>%
+  summarise_all(.funs = mean)
+
+scale <- c(seq(0, 100, by  =10),120, 140, 160, 180, 200, 300, 400, 500, 1000)
+limits <- c(0, 1000)
+h <- 6.5
+map_plot <-   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group), fill = 'white',
+                           color = 'black', size = .2)
+load('analysis/data/RG_Defined_mask.RData')
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat, fill = mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_var_dens_mean_mean.png',
+       scale = .8,height = h, width = 7.25, units = 'in', dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_var_dens_mean_mean.eps',
+       scale = .8,height = h, width = 7.25)
+
+### Median and quantiles
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_0.5))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_median_mean.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_median_mean.eps'),
+       scale = .8,height = h, width = 7.25)
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_0.8))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_80_mean.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_80_mean.eps'),
+       scale = .8,height = h, width = 7.25)
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_0.7))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_70_mean.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_70_mean.eps'),
+       scale = .8,height = h, width = 7.25)
+
+mld_avg$quant_len_0.9 <- mld_avg$quant_0.95 - mld_avg$quant_0.05
+scale <- c(seq(0, 100, by  =20),120, 140, 160, 180, 200, 300, 400, 500, 1000, 1500)
+limits <- c(0, 2000)
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_len_0.9))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')+
+  theme(legend.text = element_text(size = 8))
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_90_range_mean.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_90_range_mean.eps'),
+       scale = .8,height = h, width = 7.25)
+
+##### Specifically for each year
+year <- 2014
+scale <- c(seq(0, 100, by  =10),120, 140, 160, 180, 200, 300, 400, 500, 1000)
+limits <- c(0, 1000)
+h <- 6.5
+
+a <- ggplot(data =mld_df[mld_df$year == year,] %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_mean_', year, '.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_mean_', year, '.eps'),
+       scale = .8,height = h, width = 7.25)
+
+a <- ggplot(data =mld_df[mld_df$year == year,] %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_0.5))+
+  geom_raster() +
+  map_plot+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_median_', year, '.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_median_', year, '.eps'),
+       scale = .8,height = h, width = 7.25)
+
+mld_df$quant_len_0.9 <- mld_df$quant_0.95 - mld_df$quant_0.05
+scale <- c(seq(0, 100, by  =20),120, 140, 160, 180, 200, 300, 400, 500, 1000, 1500)
+limits <- c(0, 2000)
+a <- ggplot(data = mld_df[mld_df$year == mld_df$year,] %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = quant_len_0.9))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')+
+  theme(legend.text = element_text(size = 8))
+a
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_90_range_', year, '.png'),
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = paste0('analysis/images/mld/mld_var_dens_90_range_', year, '.eps'),
+       scale = .8,height = h, width = 7.25)
+
+
+######## Compare with ucsd estimates from http://mixedlayer.ucsd.edu/
+mld <- nc_open('analysis/products/Argo_mixedlayers_monthlyclim_05092018.nc')
+mld_da <- ncvar_get(mld,'mld_da_mean')[2,,] # February density algorithm
+mld_dt <- ncvar_get(mld,'mld_dt_mean')[2,,] # February density threshold
+mld_da_std <- ncvar_get(mld,'mld_da_std')[2,,]
+mld_dt_std <- ncvar_get(mld,'mld_dt_std')[2,,]
+long <- ncvar_get(mld,'lon')
+lat <- ncvar_get(mld,'lat')
+
+mld_da_df <- cbind(expand.grid('long' = long, 'lat' = lat), mld_var = as.vector(mld_da))
+mld_dt_df <- cbind(expand.grid('long' = long, 'lat' = lat), mld_var = as.vector(mld_dt))
+mld_dt_std <- cbind(expand.grid('long' = long, 'lat' = lat), mld_var = as.vector(mld_dt_std))
+mld_da_std <- cbind(expand.grid('long' = long, 'lat' = lat), mld_var = as.vector(mld_da_std))
+
+scale <- c(seq(0, 100, by  =10),120, 140, 160, 180, 200, 300, 400, 500, 1000)
+limits <- c(0, 1000)
+h <- 6.5
+
+a <- ggplot(data = mld_da_df %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long), y = lat,  fill = mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits)+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_algo.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_algo.eps',
+       scale = .8,height = h, width = 7.25)
+
+a <- ggplot(data = mld_dt_df %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long), y = lat,  fill = mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits)+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename =  'analysis/images/mld/scr_mld_density_thresh.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_thresh.eps',
+       scale = .8,height = h, width = 7.25)
+
+a <- ggplot(data = mld_dt_std %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long), y = lat,  fill = mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits)+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_algo_sd.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_algo_sd.eps',
+       scale = .8,height = h, width = 7.25)
+a <- ggplot(data = mld_da_std %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long), y = lat,  fill = mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits)+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_thresh_sd.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/scr_mld_density_thresh_sd.eps',
+       scale = .8,height = h, width = 7.25)
+
+
+# Compare
+mld_all <- full_join(mld_avg, mld_dt_df, by = c('long', 'lat'))
+a <- ggplot(data = mld_all %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat,  fill = (mld_var - mean)/mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(limits = c(-2, 2), values = scales::rescale(c(-2,-1,-.5, 0,.5,1, 2)),
+                       colours = RColorBrewer::brewer.pal(name = 'RdYlBu',n = 10)[10:1])+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Relative\nDifference')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_relative_thresh.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_relative_thresh.eps',
+       scale = .8,height = h, width = 7.25)
+
+mld_all <- full_join(mld_avg, mld_da_df, by = c('long', 'lat'))
+a <- ggplot(data = mld_all %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat,  fill = (mld_var - mean)/mld_var))+
+  geom_raster()+
+  scale_fill_gradientn(limits = c(-2, 2), values = scales::rescale(c(-2,-1,-.5, 0,.5,1, 2)),
+                       colours = RColorBrewer::brewer.pal(name = 'RdYlBu',n = 10)[10:1])+
+  geom_polygon(data = map_data('world2'), aes(x  = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Relative\nDifference')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_relative_algo.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_relative_algo.eps',
+       scale = .8,height = h, width = 7.25)
+
+a <- ggplot(data = mld_all %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = mld_var, y = mean))+
+  geom_point(size = .2, alpha = .2)+
+  labs(x = 'Holte et al. (2017) Density\nAlgorithm Climatology (decibars)', y = 'Functional Bootstrap Estimate (decibars)')+
+  scale_x_continuous(limits = c(0, 500))+
+  scale_y_continuous(limits = c(0, 500))+
+  scale_color_viridis_c()+
+  geom_abline(slope = 1, intercept = 0)+
+  theme_bw() + theme(text = element_text(size = 15),
+                     legend.position = 'bottom',legend.text = element_text(size = 10))
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_line_algo.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_comparison_line_also.eps',
+       scale = .8,height = h, width = 7.25)
+theme_set(theme_bw() + theme(panel.grid = element_blank(), text = element_text(size = 15),
+                             legend.position = 'bottom',legend.text = element_text(size = 10)))
+# variance estimates
+mld_all <- full_join(mld_avg, mld_da_std, by = c('long', 'lat'))
+
+a <- ggplot(data = mld_all %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat, fill = sd))+
+  geom_raster() +
+  map_plot+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_var_dens_sd_mean.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+ggsave(plot = a,
+       filename ='analysis/images/mld/mld_var_dens_sd_mean.eps',
+       scale = .8,height = h, width = 7.25)
+
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat, fill = sd))+
+  geom_raster() +
+  map_plot+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = colorRamps::matlab.like(10), limits = limits) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_var_dens_sd_mean.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+
+a <- ggplot(data = mld_avg %>% inner_join(RG_defined_long) %>% filter(value > 1999), aes(x = long_p, y = lat, fill = sd))+
+  geom_raster() +
+  map_plot+
+  scale_fill_stepsn(values = scales::rescale(c(seq(0, 100, by  =2.5),120, 140, 160, 180, 200,220)),
+                    colors = colorRamps::matlab.like(10),breaks = c(10, 20, 35, 50, 75, 100,150, 200, 300, 500, 800),
+                    guide = guide_colorsteps(barwidth = 16))+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_var_dens_sd_mean_binned.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+
+
+a <- ggplot(data = mld_all %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+            aes(x = long_p, y = lat, fill = mld_var - sd))+
+  geom_raster() +
+  map_plot+
+  scale_fill_gradientn(limits = c(-500, 500), #values = scales::rescale(c(-2,-1,-.5, 0,.5,1, 2)),
+                       colours = RColorBrewer::brewer.pal(name = 'RdYlBu',n = 10)[10:1])+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'SD')
+a
+
+
+# compare years
+
+mld_sd <- mld_df %>%
+  group_by(long, lat) %>%
+  summarise_all(.funs = sd)
+mld_mean <- mld_df %>%
+  group_by(long, lat) %>%
+  summarise_all(.funs = mean)
+mld_sd$mean_mean <- mld_mean$mean
+scale <- c(seq(0, 100, by  =10),120, 140, 160, 180, 200, 300, 400, 500, 1000)
+limits <- c(0, 1000)
+h <- 6.5
+map_plot <-   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group), fill = 'white',
+                           color = 'black', size = .2)
+load('analysis/data/RG_Defined_mask.RData')
+
+a <- ggplot(data = mld_sd %>% inner_join(RG_defined_long) %>%
+              filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long),
+                                        y = lat, fill = mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(values = scales::rescale(c(seq(0, 100, by  =2.5),120, 140, 160, 180, 200,220)),
+                       limits = c(0, 220),
+                       colours = colorRamps::matlab.like(10)) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+
+a <- ggplot(data = mld_sd %>% inner_join(RG_defined_long) %>%
+              filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long),
+                                        y = lat, fill = mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_stepsn(values = scales::rescale(c(seq(0, 100, by  =2.5),120, 140, 160, 180, 200,220)),
+                    colors = colorRamps::matlab.like(10),breaks = c(10, 20, 35, 50, 75, 100),
+                    guide = guide_colorsteps(barwidth = 8))+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_yearly_sd.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+
+a <- ggplot(data = mld_sd %>% inner_join(RG_defined_long) %>%
+              filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long),
+                                        y = lat, fill = mean/mean_mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradientn(colours = colorRamps::matlab.like(10),
+                       limits = c(0, 2)) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+
+
+mld_df_mean <- mld_df %>%
+  dplyr::select(long, lat, index, year, mean) %>%
+  tidyr::spread(year, mean)
+colnames(mld_df_mean) <- c('long', 'lat', 'index',
+                           paste0('year', 2007:2016))
+mld_df_mean$year_mean <- mld_df_mean %>%
+  dplyr::select(starts_with('year')) %>%
+  apply(1, mean)
+a <- ggplot(data = mld_df_mean %>% inner_join(RG_defined_long) %>%
+              filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long),
+                                        y = lat, fill = year2016 - year2007))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradient2(limits = c(-175, 175)) +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
+a
+
+a <- ggplot(data = mld_df_mean %>% inner_join(RG_defined_long) %>%
+              filter(value > 1999), aes(x = ifelse(long < 0, long + 360, long),
+                                        y = lat, fill = year2015 - year_mean))+
+  geom_raster() +
+  map_plot +
+  scale_fill_gradient2(limits = c(-230, 230),low = 'blue', mid = 'white',
+                       high = 'red') +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD anom (decibars)')
+a
+ggsave(plot = a,
+       filename = 'analysis/images/mld/mld_anom_2015.png',
+       scale = .8,height = h, width = 7.25, dpi = 200)
+

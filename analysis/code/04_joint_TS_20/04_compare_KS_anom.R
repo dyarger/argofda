@@ -26,12 +26,12 @@ pred_KS$lat <- pred_KS$lat-.5
 RG_KS <- full_join(pred_KS, compare_single_df)
 RG_KS$full_pred <- RG_KS$pred + RG_KS$temperature_RG
 mean_anomalies$long <- ifelse(mean_anomalies$long < 0, mean_anomalies$long + 360, mean_anomalies$long)
-compare_anom <- full_join(RG_KS, mean_anomalies)
+compare_anom <- inner_join(RG_KS, mean_anomalies)
 ggplot()+
   geom_raster(data = compare_anom, aes(x = long, y = lat, fill = full_pred_10_T- full_pred))+
   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
                color = 'black', fill = 'white', size = .2)+
-  scale_fill_gradientn(limits = c(-2.5,2.5), colours = c("blue", "white", "red"),
+  scale_fill_gradientn(limits = c(-2.7,2.7), colours = c("blue", "white", "red"),
                        values = scales::rescale(c(-2.5, -1, 0,1, 2.5)))+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Fun-KS (°C)')
 ggsave(filename = 'analysis/images/joint_TS_20/anomaly_10_compare_KS.png', scale = .8,height = 4, width = 7.25,dpi = 150)
@@ -50,7 +50,7 @@ pred_KS$lat <- pred_KS$lat-.5
 RG_KS <- full_join(pred_KS, compare_single_df)
 RG_KS$full_pred <- RG_KS$pred + RG_KS$temperature_RG
 mean_anomalies$long <- ifelse(mean_anomalies$long < 0, mean_anomalies$long + 360, mean_anomalies$long)
-compare_anom <- full_join(RG_KS, mean_anomalies)
+compare_anom <- inner_join(RG_KS, mean_anomalies)
 
 ggplot()+
   geom_raster(data = compare_anom, aes(x = long, y = lat, fill = full_pred_300_T- full_pred))+
@@ -76,7 +76,7 @@ pred_KS$lat <- pred_KS$lat-.5
 RG_KS <- full_join(pred_KS, compare_single_df)
 RG_KS$full_pred <- RG_KS$pred + RG_KS$temperature_RG
 mean_anomalies$long <- ifelse(mean_anomalies$long < 0, mean_anomalies$long + 360, mean_anomalies$long)
-compare_anom <- full_join(RG_KS, mean_anomalies)
+compare_anom <- inner_join(RG_KS, mean_anomalies)
 
 ggplot()+
   geom_raster(data = compare_anom, aes(x = long, y = lat, fill = full_pred_1500_T- full_pred))+

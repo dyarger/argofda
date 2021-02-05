@@ -7,7 +7,7 @@ calc_files <- list.files('analysis/results/cv/', pattern = 'cv_resu')
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 
-load('products/KS_cv_floats_resid_final.RData')
+load('analysis/products/KS_cv_floats_resid_final.RData')
 profile_nums_10 <- (1:length(profFloatIDAggr))[1:length(profFloatIDAggr) %in% data_10$profile_num[data_10$month == 2]]
 profile_nums_300 <- (1:length(profFloatIDAggr))[1:length(profFloatIDAggr) %in% data_300$profile_num[data_300$month == 2]]
 profile_nums_1500 <- (1:length(profFloatIDAggr))[1:length(profFloatIDAggr) %in% data_1500$profile_num[data_1500$month == 2]]
@@ -65,8 +65,8 @@ longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
-load('analysis/results/psal_one_stage_cov_pca.RData')
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/psal_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 
 temp_summary <- matrix(ncol = length(rg_levels), nrow = length(profile_nums_use))
 psal_summary <- matrix(ncol = length(rg_levels), nrow = length(profile_nums_use))
@@ -138,37 +138,37 @@ save(temp_summary, psal_summary,
      temp_mean_summary, psal_mean_summary,
      profile_nums_use,temp_representation_summary,temp_rep_error_summary,
      psal_representation_summary,psal_rep_error_summary,
-     file = 'analysis/results/compare_joint_TS_20_new.RData')
-load('results/compare_joint_TS_20.RData')
+     file = 'analysis/results/compare_joint_TS_20.RData')
+load('analysis/results/compare_joint_TS_20.RData')
 apply(temp_summary, 2, function(x) sum(!is.na(x)))
 apply(temp_summary, 2, function(x) sum(!is.na(x)))[rg_levels %in% c(10, 300, 1500)]
 
-apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_mean_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)]
-apply(temp_mean_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_mean_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)]
-apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)]
+apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)] # 0.31280451 0.33065208 0.05690722
+apply(psal_mean_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)] # 0.089872655 0.041585264 0.008162833
+apply(temp_mean_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)] # 0.6068204 0.6634698 0.1120474
+apply(psal_mean_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)] # 0.17876025 0.08694514 0.01805677
+apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)] # 0.7266018 0.8414801 0.1461088
+apply(psal_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)] # 0.2233626 0.1143802 0.0307123
 
-apply(temp_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)]
-apply(temp_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)]
-apply(temp_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)]
-apply(psal_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)]
+apply(temp_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)] # 0.20034225 0.17738107 0.03814318
+apply(psal_summary, 2, function(x) median(abs(x), na.rm = T))[rg_levels %in% c(10, 300, 1500)] # 0.059170526 0.027154927 0.006357115
+apply(temp_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)] # 0.40162190 0.37126605 0.07636077
+apply(psal_summary, 2, function(x) quantile(abs(x), na.rm = T, probs = .75))[rg_levels %in% c(10, 300, 1500)] # 0.13222699 0.06023890 0.01395079
+apply(temp_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)] # 0.5234630 0.5176045 0.1095574
+apply(psal_summary, 2, function(x) sqrt(mean(x^2, na.rm = T)))[rg_levels %in% c(10, 300, 1500)] # 0.19541214 0.10880223 0.02930242
 
 # Median Absolute residual
 cex <- 1
 png('analysis/images/cv/temp_interp_comparison_median.png',
-   width =1200, height = 800, res = 144)
+   width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,xlim = c(0,2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' , ylim = c(0, max(apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)))))
-points(rg_levels,apply(temp_summary, 2, function(x) median(abs(x), na.rm = T)), pch = 2, cex =cex - .5)
-points(c(10, 300, 1500), c(.1801, .1740, .0311),pch = 3, cex = cex, col = 2)
-points(c(10, 300, 1500), c(.4750, .3062, .0530),pch = 4, cex = cex, col = 3)
-points(c(10, 300, 1500), c(.2556, .1991, .0356),pch = 5, cex = cex, col = 4)
-legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex,cex,cex),
+plot(y = rg_levels, x = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'Median Absolute Residual' , xlim = c(0, max(apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)))))
+points(y=rg_levels,x=apply(temp_summary, 2, function(x) median(abs(x), na.rm = T)), pch = 2, cex =cex - .5)
+points(y=c(10, 300, 1500), x=c(.1801, .1740, .0311),pch = 3, cex = cex, col = 2)
+points(y=c(10, 300, 1500), x=c(.4750, .3062, .0530),pch = 4, cex = cex, col = 3)
+points(y=c(10, 300, 1500), x=c(.2556, .1991, .0356),pch = 5, cex = cex, col = 4)
+legend('bottomright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex,cex,cex),
        col = c(1,1,2,3,4), cex = 1.8, pch = 1:5)
 dev.off()
 
@@ -177,27 +177,27 @@ salinity_median_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% wh
 salinity_median_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                                  function(x) median(abs(x), na.rm = T))
 png('analysis/images/cv/psal_interp_comparison_median.png',
-    width =1200, height = 800, res = 144)
+    width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = salinity_median_mean_summary, cex = cex - .5,xlim = c(0, 2000),
-     cex.lab = 1.5,cex.axis = 1.5, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' , ylim = c(0, max(salinity_median_mean_summary)))
-points(rg_levels,salinity_median_summary, pch = 2, cex =cex - .5)
-legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col = 1,
+plot(y= rg_levels, x = salinity_median_mean_summary, cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.5,cex.axis = 1.5, ylab = 'Pressure (decibars)', xlab = 'Median Absolute Residual' , xlim = c(0, max(salinity_median_mean_summary)))
+points(y=rg_levels,x=salinity_median_summary, pch = 2, cex =cex - .5)
+legend('bottomright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col = 1,
        cex = 1.8,
        pch = 1:2)
 dev.off()
 
 # Q3
 png('analysis/images/cv/temp_interp_comparison_Q3.png',
-    width =1200, height = 800, res = 144)
+    width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)), cex = cex - .5,xlim = c(0,2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Q3 of Absolute Residuals' , ylim = c(0, max(apply(temp_mean_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)))))
+plot(y = rg_levels, x = apply(temp_mean_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)), cex = cex - .5,ylim = c(2000,0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'Q3 of Absolute Residuals' , xlim = c(0, max(apply(temp_mean_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)))))
 points(rg_levels,apply(temp_summary, 2, function(x) quantile(abs(x),probs = .75, na.rm = T)), pch = 2, cex =cex - .5)
-points(c(10, 300, 1500), c(.3735, .3684, .0641),pch = 3, cex = cex, col = 2)
-points(c(10, 300, 1500), c(.8670, .6320, .1043),pch = 4, cex = cex, col = 3)
-points(c(10, 300, 1500), c(.5026, .4213, .0736),pch = 5, cex = cex, col = 4)
-legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex -.5, cex, cex, cex),
+points(y=c(10, 300, 1500), x=c(.3735, .3684, .0641),pch = 3, cex = cex, col = 2)
+points(y=c(10, 300, 1500),x=c(.8670, .6320, .1043),pch = 4, cex = cex, col = 3)
+points(y=c(10, 300, 1500), x=c(.5026, .4213, .0736),pch = 5, cex = cex, col = 4)
+legend('bottomright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex -.5, cex, cex, cex),
        col = 1, cex = 1.8, pch = 1:5)
 dev.off()
 
@@ -206,27 +206,27 @@ salinity_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% which(pro
 salinity_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                                  function(x) quantile(abs(x), probs = .75, na.rm = T))
 png('analysis/images/cv/psal_interp_comparison_Q3.png',
-    width =1200, height = 800, res = 144)
+    width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Q3 of Absolute Residuals' , ylim = c(0, max(salinity_mean_summary)))
-points(rg_levels,salinity_summary, pch = 2, cex =cex - .5)
-legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col = 1,
+plot(y = rg_levels, x = salinity_mean_summary, cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'Q3 of Absolute Residuals' , xlim = c(0, max(salinity_mean_summary)))
+points(y=rg_levels,x=salinity_summary, pch = 2, cex =cex - .5)
+legend('bottomright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), col = 1,
        cex = 1.8,
        pch = 1:2)
 dev.off()
 
 # RMSE
 png('analysis/images/cv/temp_interp_comparison_RMSE.png',
-    width =1200, height = 800, res = 144)
+    width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))), cex = cex - .5,xlim = c(0,2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'RMSE Residuals' , ylim = c(0, max(apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))))))
-points(rg_levels,apply(temp_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))), pch = 2, cex =cex - .5)
-points(c(10, 300, 1500), c(.5072, .5124, .0883),pch = 3, cex = cex, col = 2)
-points(c(10, 300, 1500), c(.8889, .8149, .1337),pch = 4, cex = cex, col = 3)
-points(c(10, 300, 1500), c(.6135, .5782, .1014),pch = 5, cex = cex, col = 4)
-legend('topright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex, cex, cex),
+plot(y = rg_levels, x = apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))), cex = cex - .5,ylim = c(2000,0),
+     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'RMSE Residuals' , xlim = c(0, max(apply(temp_mean_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))))))
+points(y=rg_levels,x=apply(temp_summary, 2, function(x) sqrt(mean(x^2, na.rm = T))), pch = 2, cex =cex - .5)
+points(y=c(10, 300, 1500), c(.5072, .5124, .0883),pch = 3, cex = cex, col = 2)
+points(y=c(10, 300, 1500), c(.8889, .8149, .1337),pch = 4, cex = cex, col = 3)
+points(y=c(10, 300, 1500), c(.6135, .5782, .1014),pch = 5, cex = cex, col = 4)
+legend('bottomright', c('Fun. Mean', 'Fun. Model', 'KS', 'RG mean', 'RG ref'), pt.cex = c(cex - .5, cex - .5, cex, cex, cex),
        col = c(1,1,2,3,4),
        cex = 1.8,
        pch = 1:5)
@@ -238,12 +238,12 @@ salinity_mean_summary <- apply(psal_mean_summary[profile_nums_use %in% which(pro
 salinity_summary <- apply(psal_summary[profile_nums_use %in% which(profModeAggr == 'D'),], 2,
                           function(x) sqrt(mean(x^2, na.rm = T)))
 png('analysis/images/cv/psal_interp_comparison_RMSE.png',
-    width =1200, height = 800, res = 144)
+    width =800, height = 1200, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'RMSE Residuals' , ylim = c(0, max(salinity_mean_summary)))
-points(rg_levels,salinity_summary, pch = 2, cex =cex -.5)
-legend('topright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), pch = 1:2,
+plot(y = rg_levels, x = salinity_mean_summary, cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'RMSE Residuals' , xlim = c(0, max(salinity_mean_summary)))
+points(y=rg_levels,salinity_summary, pch = 2, cex =cex -.5)
+legend('bottomright', c('Fun. Mean', 'Fun. Model'), pt.cex = rep(cex - .5, 2), pch = 1:2,
        cex = 1.8,
        col = rep(1, 2))
 dev.off()
@@ -251,15 +251,15 @@ dev.off()
 ## pc representation error
 
 png('analysis/images/cv/temp_score_rep.png',
-    width = 1200, height = 800, res = 144)
+    height = 1200, width = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,xlim = c(0, 2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' ,
-     ylim = c(0, max(apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)))))
-points(rg_levels,apply(temp_summary, 2, function(x) median(abs(x), na.rm = T)), col = 2, cex =cex - .5)
-points(rg_levels,apply(temp_representation_summary, 2, function(x) median(abs(x), na.rm = T)), col = 3, cex =cex - .5)
-points(rg_levels,apply(temp_rep_error_summary, 2, function(x) median(abs(x), na.rm = T)), col = 4, cex =cex - .5)
-legend('topright', c('Mean', 'Pred', 'Score Rep', 'Score Error'), pt.cex = c(cex - .5, cex - .5, cex -.5, cex - .5),
+plot(y = rg_levels, x = apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)), cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'Median Absolute Residual' ,
+     xlim = c(0, max(apply(temp_mean_summary, 2, function(x) median(abs(x), na.rm = T)))))
+points(y=rg_levels,x=apply(temp_summary, 2, function(x) median(abs(x), na.rm = T)), col = 2, cex =cex - .5)
+points(y=rg_levels,x=apply(temp_representation_summary, 2, function(x) median(abs(x), na.rm = T)), col = 3, cex =cex - .5)
+points(y=rg_levels,x=apply(temp_rep_error_summary, 2, function(x) median(abs(x), na.rm = T)), col = 4, cex =cex - .5)
+legend('bottomright', c('Mean', 'Pred', 'Score Rep', 'Score Error'), pt.cex = c(cex - .5, cex - .5, cex -.5, cex - .5),
        col = c(1:4),
        cex = 1.6,
        pch = c(1,1,1,1))
@@ -277,13 +277,13 @@ salinity_rep_error_summary <- apply(psal_rep_error_summary[profile_nums_use %in%
 png('analysis/images/cv/psal_score_rep.png',
     width = 1200, height = 800, res = 144)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
-plot(x = rg_levels, y = salinity_mean_summary, cex = cex - .5,xlim = c(0, 2000),
-     cex.lab = 1.8,cex.axis = 1.8, xlab = 'Pressure (decibars)', ylab = 'Median Absolute Residual' ,
-     ylim = c(0, max(salinity_mean_summary)))
-points(rg_levels,salinity_summary, col = 2, cex =cex - .5)
-points(rg_levels,salinity_respresentation_summary, col = 3, cex =cex - .5)
-points(rg_levels,salinity_rep_error_summary, col = 4, cex =cex - .5)
-legend('topright', c('Mean', 'Pred', 'Score Rep', 'Score Error'), pt.cex = rep(cex - .5, 4),
+plot(y = rg_levels, x = salinity_mean_summary, cex = cex - .5,ylim = c(2000, 0),
+     cex.lab = 1.8,cex.axis = 1.8, ylab = 'Pressure (decibars)', xlab = 'Median Absolute Residual' ,
+     xlim = c(0, max(salinity_mean_summary)))
+points(y=rg_levels,salinity_summary, col = 2, cex =cex - .5)
+points(y=rg_levels,salinity_respresentation_summary, col = 3, cex =cex - .5)
+points(y=rg_levels,salinity_rep_error_summary, col = 4, cex =cex - .5)
+legend('bottomright', c('Mean', 'Pred', 'Score Rep', 'Score Error'), pt.cex = rep(cex - .5, 4),
        col = c(1:4),
        cex = 1.6,
        pch = c(1,1,1,1))

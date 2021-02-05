@@ -29,7 +29,7 @@ for (j in 1:length(calc_files)) {
                                                                    profile_num = profile_nums[x]))
   temp_results <- lapply(cv_results, function(x) x[[1]])
   psal_results <- lapply(cv_results, function(x) x[[2]])
-  info <- lapply(cv_results, function(x) x[[7]][2])
+  info <- lapply(cv_results, function(x) x[[7]])
 
   cond_var_old_scores <- lapply(cv_results, function(x) x[[4]])
   final_list[[j]] <- list(mode[!no_pred], residuals[!no_pred],
@@ -39,6 +39,11 @@ for (j in 1:length(calc_files)) {
                           info[!no_pred],n_delayed[!no_pred])
   print(j)
 }
+info <- lapply(final_list, function(x) x[[7]])
+info <- unlist(info, recursive = F)
+info <- do.call(rbind, info)
+summary(info)
+
 residuals <- lapply(final_list, function(x) x[[2]])
 residuals <- unlist(residuals, recursive = F)
 residuals <- bind_rows(residuals)
@@ -147,8 +152,8 @@ residuals$in_interval_temp <- ifelse(residuals$temp_mean_residual <= upper_bound
 residuals$in_interval_psal <- ifelse(residuals$psal_mean_residual <= upper_bound_psal &
                                        residuals$psal_mean_residual >= lower_bound_psal,
                                      1, 0)
-mean(residuals$in_interval_temp)
-mean(residuals$in_interval_psal[residuals$mode == 'D'])
+mean(residuals$in_interval_temp) # 0.9617867
+mean(residuals$in_interval_psal[residuals$mode == 'D']) # 0.9818921
 
 residual_summary_coverage <- residuals %>%
   select(-mode) %>%
@@ -160,15 +165,15 @@ residual_summary_coverage_delayed <- residuals %>%
   group_by(pgroup, mode) %>%
   summarise(in_interval_psal = mean(in_interval_psal, na.rm = T)) %>%
   ungroup() %>% filter(mode == 'D')
-png('analysis/images/cv/one_stage_coverage_both.png', width =900, height = 600, res = 144)
+png('analysis/images/cv/one_stage_coverage_both.png', width =600, height = 900, res = 144)
 par(mar=c(5.1-1, 4.1, 4.1-3, 2.1-1))
-plot(residual_summary_coverage$pgroup, residual_summary_coverage$in_interval_temp, cex = .7, # ylim = c(-.05, .05),
-     ylab = 'Pointwise Coverage', xlab = 'Pressure (dbar)',
-     ylim = c(.8, 1))
-abline(h=  pnorm(q = 2) - pnorm(q = -2))
-points(residual_summary_coverage_delayed$pgroup, residual_summary_coverage_delayed$in_interval_psal, cex = .7,  #ylim = c(-.005, .005),
-       ylab = 'Pointwise Coverage, Salinity', xlab = 'Pressure',ylim = c(.8, 1), pch = 2)
-legend('bottomright', c('Temperature', 'Salinity'), pch = c(1,2), pt.cex = c(.7, .7))
+plot(y = residual_summary_coverage$pgroup, x = residual_summary_coverage$in_interval_temp, cex = .7, # ylim = c(-.05, .05),
+     xlab = 'Pointwise Coverage', ylab = 'Pressure (dbar)',
+     xlim = c(.8, 1), ylim = c(2000, 0))
+abline(v=  pnorm(q = 2) - pnorm(q = -2))
+points(y = residual_summary_coverage_delayed$pgroup, x = residual_summary_coverage_delayed$in_interval_psal, cex = .7,  #ylim = c(-.005, .005),
+       pch = 2)
+legend('bottomleft', c('Temperature', 'Salinity'), pch = c(1,2), pt.cex = c(.7, .7))
 dev.off()
 
 ## QQ plots
@@ -321,8 +326,8 @@ temp_results <- unlist(sapply(final_list, function(x) x[[3]]), recursive = F)
 temp_in_band <- sapply(temp_results, function(x) all(x[[5]]))
 temp_in_ci <- t(sapply(temp_results, function(x) c(sum(x[[6]]), length(x[[6]]))))
 temp_prop <- apply(temp_in_ci,2, sum, na.rm = T)
-temp_prop[1]/temp_prop[2]
-mean(temp_in_band)
+temp_prop[1]/temp_prop[2] # 0.9617867
+mean(temp_in_band) # 0.9557133
 
 # Salinity coverages - delayed mode only
 delayed <- unlist(sapply(final_list, function(x) x[[1]]), recursive = F)
@@ -331,7 +336,7 @@ psal_results <- psal_results[delayed == 'D']
 psal_in_band <- sapply(psal_results, function(x) all(x[[5]]))
 psal_in_ci <- t(sapply(psal_results, function(x) c(sum(x[[6]]), length(x[[6]]))))
 psal_prop <- apply(psal_in_ci, 2, sum, na.rm = T)
-psal_prop[1]/psal_prop[2]
-table(psal_in_band)[2]/length(psal_in_band)
+psal_prop[1]/psal_prop[2] # 0.9818921
+table(psal_in_band)[2]/length(psal_in_band) # 0.9662521
 
 

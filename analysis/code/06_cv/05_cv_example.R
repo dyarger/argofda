@@ -3,16 +3,18 @@ load('analysis/data/jan_march_residuals.RData')
 load('analysis/results/cv/cv_results_8.RData')
 profile_nums <- sapply(cv_results, function(x) x[[7]][1])
 single_results <- cv_results[[574]]
+index <- 1000
+single_results <- cv_results[[index]]
 residuals <- single_results[[3]]
 cond_var <- single_results[[4]]
 single_results[[5]]
 K1 <- 10
 K2 <- 10
-
-profLatAggr[7332]
-profLongAggr[7332]
-profFloatIDAggr[7332]
-profCycleNumberAggr[7332]
+profile_nums[1000]
+profLatAggr[as.integer(profile_nums[1000])]
+profLongAggr[as.integer(profile_nums[1000])]
+profFloatIDAggr[as.integer(profile_nums[1000])]
+profCycleNumberAggr[as.integer(profile_nums[1000])]
 
 latvals <- seq(-79.5, 79.5, by = 1)
 longvals <- seq(20.5, 379.5, by = 1)
@@ -20,14 +22,14 @@ longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
 grid_to_compute$order <- 1:nrow(grid_to_compute)
 
-lat_eval <- round(profLatAggr[73372]-.5) + .5 # grid point 44788, job 90, 288
-long_eval <- round(profLongAggr[73372]-.5) + .5
+lat_eval <- round(profLatAggr[as.double(profile_nums[index])]-.5) + .5 # grid point 44788, job 90, 288
+long_eval <- round(profLongAggr[as.double(profile_nums[index])]-.5) + .5
 
 grid_to_compute[grid_to_compute$long == long_eval & grid_to_compute$lat == lat_eval,]
-
-load('analysis/results/psal_one_stage_cov_pca.RData')
+which(grid_to_compute$long == long_eval & grid_to_compute$lat == lat_eval)
+load('analysis/results/psal_cov_pca.RData')
 coefs_pc_psal <- coefs_pc_psal[[which(grid_pc_psal$long == long_eval & grid_pc_psal$lat == lat_eval)]][[1]][,1:K2]
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 coefs_pc_temp <- coefs_pc_temp[[which(grid_pc_temp$long == long_eval & grid_pc_temp$lat == lat_eval)]][[1]][,1:K1]
 p <- 0:2000
 pc_vals_temp <- sapply(1:K1, function(x) predict(make_fit_object(knots_pc, coefs_pc_temp[,x]), p)$y)
@@ -39,10 +41,10 @@ pred_values_psal <- rowSums(pc_vals_psal %*% diag(single_results[[2]][[1]]))
 var_values_temp <- diag(as.matrix(pc_vals_temp %*% cond_var[1:K1, 1:K1] %*% t(pc_vals_temp)))
 var_values_psal <- diag(as.matrix(pc_vals_psal %*% cond_var[(K1+1):(K1 + K2), (K1+1):(K1 + K2)] %*% t(pc_vals_psal)))
 
-load('analysis/results/nugget_variance/nugget_var_40000.RData')
-nugget_single <- Grid_Pred40000[[267]]
-var_pred_temp_out <- exp(predict(nugget_single[[1]], 0:2000))/(1/2*exp(digamma(1)))
-var_pred_psal_out <- exp(predict(nugget_single[[2]], 0:2000))/(1/2*exp(digamma(1)))
+load('analysis/results/nugget_variance/nugget_var_31500.RData')
+nugget_single <- nugget_var[[5]]
+var_pred_temp_out <- exp(predict.local_function(nugget_single[[1]], 0:2000))/(1/2*exp(digamma(1)))
+var_pred_psal_out <- exp(predict.local_function(nugget_single[[2]], 0:2000))/(1/2*exp(digamma(1)))
 
 lower_bound_temp <- pred_values_temp -2*sqrt(var_values_temp+var_pred_temp_out)
 upper_bound_temp <- pred_values_temp +2*sqrt(var_values_temp+var_pred_temp_out)

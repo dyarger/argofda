@@ -3,7 +3,7 @@ library(ggplot2)
 library(viridis)
 library(argofda)
 library(dplyr)
-type <- 'psal'
+type <- 'temp'
 label <- c('Temperature', 'Salinity')[c('temp', 'psal') == type]
 label_units <- c('Temp (°C)', 'PSU')[c('temp', 'psal') == type]
 color_scale <- list(c(-2, 32),c(30, 38))[[which(c('temp', 'psal') == type)]]
@@ -95,11 +95,12 @@ ll_single_location <- function(long_example, lat_example) {
 # For one location, get different functions
 pred_vals_long <- mean_single_location(long_example, lat_example)
 ll_vals <- ll_single_location(long_example, lat_example)
-time_15 <- pred_vals_long$value[pred_vals_long$year == 2010] - 200 * ll_vals[, 'll_lat'] +(-200)^2/2 * ll_vals[, 'lq_lat']
 pred_vals_wide <- tidyr::spread(pred_vals_long, year, value)
 avg_fun <- apply(pred_vals_wide[,-1], 1, mean)
+time_15 <- avg_fun - 400 * ll_vals[, 'll_lat']# +(-300)^2/2 * ll_vals[, 'lq_lat']
+
 pred_vals_long <- rbind(pred_vals_long,
-                        data.frame(year = '2010, 200 km Lat', value = time_15, pressure =pred_vals_long$pressure[pred_vals_long$year == 2010]),
+                        data.frame(year = 'test', value = time_15, pressure =pred_vals_long$pressure[pred_vals_long$year == 2010]),
                         data.frame(year = 'Avg', value = avg_fun, pressure =pred_vals_long$pressure[pred_vals_long$year == 2010]))
 theme_set(theme_bw())
 
@@ -110,9 +111,24 @@ profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 data_mode <- c('all', 'delayed')[c('temp', 'psal') == type]
 data <- get_profile_data_subset(lat = lat_example, long = long_example, day = 45.25,RG_def = T,h_space = 900, h_time = 45.25,
                                 mode = data_mode,
-                                  exclusion = T,min_prof = 30, years = c(2010))
+                                  exclusion = T,min_prof = 30, years = c(1007:2016))
 ylim_example <- list(c(10, 31),c(34, 36.5))[[which(c('temp', 'psal') == type)]]
 data$response <- list(data$temperature,data$salinity)[[which(c('temp', 'psal') == type)]]
+pred_vals_long <- arrange(pred_vals_long, year, pressure)
+ggplot(data = pred_vals_long[pred_vals_long$year %in% c('Avg', 'test'),], aes(x = pressure, y = value,
+                                                                                    group = year))+
+  geom_line(data= data, mapping = aes(x = pressure, y = response,group = profile),
+            alpha = .1)+
+  geom_point(data= data,
+             aes(x = pressure, y = response),size = .2, alpha = .1)+
+  geom_line(size = 1.2, aes(color = as.factor(year)))+
+  coord_flip(xlim = c(350, 0), ylim = c(10, 31))+
+  scale_x_continuous(trans = 'reverse')+
+  #scale_color_viridis_d(option = 'E', labels= c(expression('s = s'[0]),expression('s = s'[0]*' - 200 km S')))+
+  scale_color_discrete( labels= c(expression('s = s'[0]),expression('s = s'[0]*' - 400 km S')))+
+  labs(x = 'Pressure (decibars)', y = label_units,color = 'Function')+
+  theme(legend.position = 'bottom')
+ggsave(height = 8, width = 5, file = 'analysis/images/mean_estimation/mean_example_jsm.png')
 
 
 ggplot(data = pred_vals_long[pred_vals_long$year %in% c('2010', '2013', 'Avg'),], aes(x = pressure, y = value))+

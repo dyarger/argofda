@@ -5,12 +5,18 @@ library(viridis)
 library(fda)
 theme_set(theme_bw() + theme(panel.grid = element_blank(), text = element_text(size = 15)))
 
-type <- 'temp'
+type <- 'psal'
 label <- c('Temperature', 'Salinity')[c('temp', 'psal') == type]
 label_units <- c('Temp (°C)', 'PSU')[c('temp', 'psal') == type]
-cov_files <- list.files('analysis/results/marginal_cov/', pattern = paste0(type, '_one_stage_'))
+cov_files <- list.files('analysis/results/marginal_cov/', pattern = paste0(type))
+cov_files <- cov_files[nchar(cov_files) < 20]
+if (substr(cov_files[1], 1,4) == 'lags') {
+  cov_files <- cov_files[-1]
+}
+#cov_files <- list.files('analysis/results/marginal_cov/', pattern = paste0(type, '_complete_'))
 
 funs <- list()
+cv_info <- list()
 prof_info <- list()
 for (i in 1:length(cov_files)) {
   load(paste0('analysis/results/marginal_cov/', cov_files[i]))
@@ -25,29 +31,38 @@ for (i in 1:length(cov_files)) {
       return(x[[1]])
     }
   })
-  prof_info[[i]] <- lapply(now, function(x) {
+  cv_info[[i]] <- lapply(now, function(x) {
     if (x[[2]][[1]][[1]][1] == 'no profiles in range') {
       return(NULL)
     } else {
       return(x[[2]])
     }
   })
+  prof_info[[i]] <- lapply(now, function(x) {
+    if (x[[2]][[1]][[1]][1] == 'no profiles in range') {
+      return(NULL)
+    } else {
+      return(x[[3]])
+    }
+  })
 }
 funs <- unlist(funs, recursive = F)
 beta <- lapply(funs, function(x) {
-  if (is.null(x)) {return(NULL)} else {return(x[[1]])}
+  if (is.null(x)) {return(NULL)} else {return(x)}
 })
 have_results <- !sapply(beta, is.null)
 beta <- beta[have_results]
 knots <- funs[have_results][[1]][[2]]
-cv_info <- lapply(funs[have_results], function(x) x[[3]])
-cv_niter <- sapply(cv_info, nrow)
+knots <- seq(0, 2000, length.out = 100)
+cv_info <- unlist(cv_info, recursive = F)
+cv_niter <- sapply(cv_info[have_results], nrow)
 summary(cv_niter)
 
 prof_info <- unlist(prof_info, recursive = F)
 prof_info <- prof_info[have_results]
 prof_info <- do.call(rbind, prof_info)
-colnames(prof_info) <- c('index', 'orig_samples', 'seconds', 'profiles', 'h_space', 'measurements')
+colnames(prof_info) <- c('index', 'orig_samples', 'seconds', 'profiles', 'measurements', 'profiles2',
+                         'h_space')
 summary(prof_info)
 
 latvals <- seq(-79.5, 79.5, by = 1)
@@ -57,18 +72,23 @@ grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
 grid_to_compute_only <- grid_to_compute[have_results,]
 
 #### Plots ####
-
+vals <- substr(cov_files, 15, 19)
+plot(as.numeric(vals))
 # correlation at two different pressures
 
 save_cor_image <- function(p1, p2) {
   basis <- create.bspline.basis(breaks = knots)
   B <- eval.basis(c(p1, p2), basis)
   cor_val <- sapply(beta, function(x) {
-    beta_mat <- do.call(cbind, x)
+   # beta_mat <- do.call(cbind, x)
+    A_mat = matrix(0, length(knots)+2, length(knots)+2)
+    A_mat[lower.tri(A_mat, diag=TRUE)] = x
+    beta_mat = as.matrix(forceSymmetric(A_mat, 'L'))
     (t(B[1,]) %*% beta_mat %*% B[2,])/sqrt((t(B[1,]) %*% beta_mat %*% B[1,]) *
                                              (t(B[2,]) %*% beta_mat %*% B[2,]))
   })
-  im <- ggplot(data = cbind(grid_to_compute[have_results,], cor_val))+
+  cor_val <- ifelse(cor_val < -1, -1, ifelse(cor_val > 1, 1, cor_val))
+  im <- ggplot(data = cbind(grid_to_compute_only, cor_val))+
     geom_raster(aes(x =  long, y = lat,
                     fill= cor_val))+
     scale_fill_gradientn(limits = c(-1, 1), colours = c('blue', 'white', 'red'))+
@@ -98,7 +118,10 @@ omega_0_sqrt <- as(chol(omega_0), 'sparseMatrix')
 
 a <- proc.time()
 coefs_pc <- lapply(beta, function(x) {
-  A_mat <- matrix(unlist(x), nrow = length(knots) + 2)
+  A_mat = matrix(0, length(knots)+2, length(knots)+2)
+  A_mat[lower.tri(A_mat, diag=TRUE)] = x
+  A_mat = as.matrix(forceSymmetric(A_mat, 'L'))
+  #A_mat <- matrix(unlist(x), nrow = length(knots) + 2)
   pca_mat <- omega_0_sqrt %*% A_mat %*% t(omega_0_sqrt)
   standard_pca <- prcomp(pca_mat, center = FALSE, scale = FALSE)
   vectors <- solve(omega_0_sqrt, standard_pca$rotation)
@@ -106,6 +129,10 @@ coefs_pc <- lapply(beta, function(x) {
 })
 b <- proc.time()
 b-a
+index <- sample(1:length(coefs_pc), 1)
+plot(coefs_pc[[index]][[1]][,1])
+plot(coefs_pc[[index]][[1]][,2])
+plot(coefs_pc[[index]][[1]][,3])
 
 grid_to_compute_only$long <- ifelse(grid_to_compute_only$long > 180,
                                     grid_to_compute_only$long - 360,
@@ -117,15 +144,18 @@ if (type == 'temp') {
   grid_pc_temp <- grid_pc
   save(coefs_pc_temp, grid_pc_temp, knots_pc, file = paste0( 'analysis/results/',
                                                    type,
-                                                   '_one_stage_cov_pca.RData'))
+                                                   '_cov_pca.RData'))
 } else if (type == 'psal') {
   coefs_pc_psal <- coefs_pc
   grid_pc_psal <- grid_pc
   save(coefs_pc_psal, grid_pc_psal, knots_pc, file = paste0( 'analysis/results/',
                                                    type,
-                                                   '_one_stage_cov_pca.RData'))
+                                                   '_cov_pca.RData'))
 }
-
+save(coefs_pc_psal, grid_pc_psal, knots_pc, file = paste0( 'analysis/results/',
+                                                           type,
+                                                           '_cov_pca_v2.RData'),
+     version = 2)
 grid_to_compute_only$long <- ifelse(grid_to_compute_only$long < 0,
                                     grid_to_compute_only$long + 360,
                                     grid_to_compute_only$long)
@@ -198,8 +228,12 @@ basis <- create.bspline.basis(breaks = knots)
 omega_0 <- as(bsplinepen(basis,Lfdobj = 0), 'sparseMatrix')
 omega_0_sqrt <- as(chol(omega_0), 'sparseMatrix')
 
-A_mat <- matrix(unlist(beta[[which(grid_to_compute_only$long == long_example &
-                                     grid_to_compute_only$lat == lat_example)]]), nrow = length(knots) + 2)
+
+A_mat = matrix(0, length(knots)+2, length(knots)+2)
+A_mat[lower.tri(A_mat, diag=TRUE)] = unlist(beta[[which(grid_to_compute_only$long == long_example &
+                                                          grid_to_compute_only$lat == lat_example)]])
+A_mat = as.matrix(forceSymmetric(A_mat, 'L'))
+
 pca_mat <- omega_0_sqrt %*% A_mat %*% t(omega_0_sqrt)
 standard_pca <- prcomp(pca_mat, center = FALSE, scale = FALSE)
 vectors <- solve(omega_0_sqrt, standard_pca$rotation)
@@ -235,7 +269,13 @@ make_lags <- function(lag) {
   B_1 <- eval.basis(c(pressure_check_1, 2000), basis)
   B_2 <- eval.basis(c(pressure_check_2, 2000), basis)
   cor_lag <- sapply(beta, function(x) {
-    beta_mat <- do.call(cbind, x)
+
+   # beta_mat <- do.call(cbind, x)
+
+    A_mat = matrix(0, length(knots)+2, length(knots)+2)
+    A_mat[lower.tri(A_mat, diag=TRUE)] = unlist(x)
+    beta_mat = as.matrix(forceSymmetric(A_mat, 'L'))
+
     sapply(1:length(pressure_check_1), function(z) {
       ((t(B_1[z,]) %*% beta_mat %*% B_2[z,])/sqrt((t(B_1[z,]) %*% beta_mat %*% B_1[z,]) *
                                                     (t(B_2[z,]) %*% beta_mat %*% B_2[z,])))[1]
@@ -256,7 +296,7 @@ make_lags <- function(lag) {
   lags_summary$pressure <- as.numeric(as.character(lags_summary$pressure))
   tidyr::gather(lags_summary, Type, value, -1)
 }
-
+knots_pc <- knots
 lag_010 <- make_lags(10)
 lag_025 <- make_lags(25)
 lag_050 <- make_lags(50)
@@ -264,7 +304,7 @@ lag_100 <- make_lags(100)
 lag_200 <- make_lags(200)
 lag_500 <- make_lags(500)
 save(lag_010, lag_025, lag_050, lag_100, lag_200, lag_500,
-     file = paste0('results/marginal_cov/lags_', type, '_one_stage.RData'))
+     file = paste0('analysis/results/marginal_cov/lags_', type, '.RData'))
 theme_set(theme_bw() + theme(text = element_text(size = 15)))
 
 lag_010 <- data.frame(lag_010, 'lag' = 10 )
@@ -288,8 +328,72 @@ a <- ggplot(data = lags) +
   labs(x= 'Lag (decibars)', y = 'Correlation between measurements\n at p and p+lag')
 a
 ggsave(plot = a,
-       filename = paste0('analysis/images/marginal_cov/cor_incr_', type, '.png'),
+       filename = paste0('analysis/images/marginal_cov/cor_incr_', type, '_complete.png'),
        scale = 1.2,height = 4, width = 7.25)
 ggsave(plot = a,
-       filename = paste0('analysis/images/marginal_cov/cor_incr_', type, '.eps'),
+       filename = paste0('analysis/images/marginal_cov/cor_incr_', type, '_complete.eps'),
        scale = 1.2,height = 4, width = 7.25)
+
+
+# check signs
+
+load(file = paste0( 'analysis/results/temp_cov_pca.RData'))
+
+# implement sign switching
+inprod_mat <- as(fda::eval.penalty(basisobj = create.bspline.basis(knots_pc), Lfdobj = 0) ,
+                 'sparseMatrix')
+which(grid_pc_temp$long == 90.5 &
+        grid_pc_temp$lat == -50.5)
+beta_test <- list(coefs_pc_temp[[27072+45]][[1]][,1],
+                  coefs_pc_temp[[27003+45]][[1]][,1],
+                  coefs_pc_temp[[8735-50]][[1]][,1])
+grid_use <- grid_pc_temp[c(8735 -50, 27003+45, 27072+45),]
+sign_val <- sapply(1:nrow(grid_pc_temp), function(x) {
+  if (length(beta_test) ==0) {
+    return(1)
+  }
+  tests <- sapply(beta_test, function(y) {
+    sign((t(coefs_pc_temp[[x]][[1]][,1]) %*% inprod_mat %*% y)[1])
+  })
+  sign(sum(tests))
+})
+
+pc1_val <- sapply(1:length(coefs_pc_temp), function(x) {
+  coefs_pc_temp[[x]][[1]][5,1] * sign_val[x]
+})
+
+pc1_val_old <- sapply(1:length(coefs_pc_temp), function(x) {
+  coefs_pc_temp[[x]][[1]][5,1]
+})
+
+im <- ggplot()+
+  geom_raster(data = cbind(grid_pc_temp, pc1_val),aes(x =  ifelse(long < 0, long+  360, long), y = lat,
+                  fill= pc1_val))+
+  scale_fill_gradient2(low = c('blue'), high = c( 'red'))+
+  geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  geom_point(data = grid_use, aes(x =  ifelse(long < 0, long+  360, long), y = lat))+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Coef')
+print(im)
+ggsave(plot = im,
+       filename = paste0('analysis/images/marginal_cov/temp_1_5_aligned.png'),
+       scale = .8,height = 4, width = 7.25)
+
+
+im <- ggplot()+
+  geom_raster(data = cbind(grid_pc_temp, pc1_val_old),aes(x =  ifelse(long < 0, long+  360, long), y = lat,
+                                                      fill= pc1_val_old))+
+  scale_fill_gradient2(low = c('blue'), high = c( 'red'))+
+  geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
+               color = 'black', fill = 'white', size = .2)+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Coef')
+ggsave(plot = im,
+       filename = paste0('analysis/images/marginal_cov/temp_1_5_unaligned.png'),
+       scale = .8,height = 4, width = 7.25)
+
+print(im)
+grid_pc_temp[14550,]
+grid_pc_temp[8750,]
+
+
+#sign_val_lr <-  sign_val

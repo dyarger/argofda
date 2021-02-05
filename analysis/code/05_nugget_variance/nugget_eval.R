@@ -5,7 +5,7 @@ library(sparseinv)
 library(dplyr)
 library(fields)
 library(parallel)
-
+setwd('/home/dyarger/argofda')
 load('analysis/data/jan_march_residuals.RData')
 profLongAggr <- ifelse(profLongAggr > 180, profLongAggr - 360, profLongAggr)
 
@@ -43,10 +43,10 @@ cv <- function(index, h_space, K1, K2) {
     return(final_list)
   }
 
-  pressure_min <- df %>% group_by(profile) %>% summarise(min(pressure))
-  pressure_max <- df %>% group_by(profile) %>% summarise(max(pressure))
+  pressure_min <- df %>% group_by(profile) %>% summarise(min(pressure), .groups = 'drop')
+  pressure_max <- df %>% group_by(profile) %>% summarise(max(pressure), .groups = 'drop')
   short_profiles <- (1:nrow(pressure_max))[which(pressure_max[,2] - pressure_min[,2] < 800)]
-  prof_lengths <- df %>% group_by(profile) %>% summarise(n())
+  prof_lengths <- df %>% group_by(profile) %>% summarise(n(), .groups = 'drop')
   small_profiles <-(1:nrow(prof_lengths))[which(prof_lengths[,2] < 15)]
   df <- df[!(df$profile %in% short_profiles) & !(df$profile %in% small_profiles),]
   df$profile <- as.numeric(as.factor(df$profile))
@@ -66,16 +66,28 @@ cv <- function(index, h_space, K1, K2) {
   # get first few pc at this location
   # Calculate scores for each profile
   t_t <- get_scores(df, temp_pc, K1, type = 'temperature', knots = knots_pc)
-  scores_temp <- t_t[[1]]
   df$resids_temp <- unlist(t_t[[2]])
+  rm(t_t)
   max_prof <- max(df$profile)
 
   s_s <- get_scores(df, psal_pc, K2, type = 'salinity', knots = knots_pc)
-  scores_psal <- s_s[[1]]
   df$resids_psal <- unlist(s_s[[2]])
-
+  rm(s_s)
+  basis <- create.bspline.basis(knots)
   # Fit spline to the variance of the residuals
-  phi <- as(fda::eval.basis(basis = create.bspline.basis(knots), evalarg = df$pressure), 'sparseMatrix')
+  nr <- nrow(df)
+  gc()
+  if (nr %%2 ==0) {
+    phi1 <- as(fda::eval.basis(basis, evalarg = df$pressure[1:(nr/2)]), 'sparseMatrix')
+    phi2 <- as(fda::eval.basis(basis, evalarg = df$pressure[(nr/2 + 1):nr]), 'sparseMatrix')
+  } else {
+    phi1 <- as(fda::eval.basis(basis, evalarg = df$pressure[1:((nr-1)/2)]), 'sparseMatrix')
+    phi2 <- as(fda::eval.basis(basis, evalarg = df$pressure[((nr-1)/2 + 1):nr]), 'sparseMatrix')
+  }
+  phi <- rbind(phi1, phi2)
+  rm(phi1, phi2)
+  gc()
+ # phi <- as(fda::eval.basis(basis = create.bspline.basis(knots), evalarg = df$pressure), 'sparseMatrix')
   prof_lengths <- aggregate(df$pressure, list(df$profile), length)
   W <- argofda::construct_working_cov(p = df$pressure,
                                    weights = df$wt/rep(prof_lengths$x, prof_lengths$x),
@@ -119,16 +131,17 @@ array_id <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 increments <- 500
 
 profile_start <- 1 + (array_id - 1) * increments
+#indexes <- seq(1, nrow(grid_to_compute), by = 1)
 indexes <- profile_start:(profile_start+increments-1)
 
 grid_to_compute_only_ours <- grid_to_compute[grid_to_compute$order %in% indexes,]
 
-load('analysis/results/psal_one_stage_cov_pca.RData')
+load('analysis/results/psal_cov_pca.RData')
 coefs_pc_psal <- coefs_pc_psal[grid_pc_psal$long %in% grid_to_compute_only_ours$long &
                                  grid_pc_psal$lat %in% grid_to_compute_only_ours$lat]
 grid_pc_psal <- grid_pc_psal[grid_pc_psal$long %in% grid_to_compute_only_ours$long &
                                grid_pc_psal$lat %in% grid_to_compute_only_ours$lat,]
-load('analysis/results/psal_one_stage_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 coefs_pc_temp <- coefs_pc_temp[grid_pc_temp$long %in% grid_to_compute_only_ours$long &
                             grid_pc_temp$lat %in% grid_to_compute_only_ours$lat]
 grid_pc_temp <- grid_pc_temp[grid_pc_temp$long %in% grid_to_compute_only_ours$long &
@@ -137,16 +150,12 @@ grid_pc_temp <- grid_pc_temp[grid_pc_temp$long %in% grid_to_compute_only_ours$lo
 if (array_id == ceiling(nrow(grid_to_compute)/increments)) {
   indexes <- indexes[sapply(sequence[indexes], function(x) {!is.null(x)})]
 }
-
+value <- indexes[length(indexes)]
 # Run for a large number of grid points
-if (array_id == ceiling(nrow(grid_to_compute)/increments)) {
-  value <- sequence[[indexes[length(indexes)]]]-1
-} else {
-  value <- sequence[[indexes[length(indexes)]+1]]-1
-}
-object_name <-  paste('Grid_Pred', value, sep = '')
-command <- paste(object_name, ' <- mclapply(indexes, cv,',
-                 'mc.preschedule = F, mc.cores = 1,K1 = 10, K2 = 10,',
+object_name <- 'nugget_var'
+command <- paste(object_name, ' <- lapply(indexes, cv,',
+                 'K1 = 10, K2 = 10,',
+               #  'mc.preschedule = F, mc.cores = 4,',
                  'h_space = h_space',
                  ')', sep="")
 a <- proc.time()
@@ -160,9 +169,10 @@ if (nchar(value) == 2) {
 } else if(nchar(value) == 4) {
   value <- paste0('0',value)
 }
-file.to.save <- paste0('analysis/results/nugget_variance/nugget_var_',
-                       value, '.RData')
+file.to.save <- paste0('analysis/results/nugget_variance/nugget_var_', value, '.RData')
 eval(parse(text=paste('save(', object_name, ', file = file.to.save)', sep = '')))
 
 q()
+
+
 

@@ -3,6 +3,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(colorRamps)
 library(argofda)
+library(dplyr)
 theme_set(theme_bw() + theme(panel.grid = element_blank(), text = element_text(size = 15)))
 
 calc_files <- list.files('analysis/results/joint_TS_20/',
@@ -13,21 +14,29 @@ prof_info <- list()
 K1 <- 10
 K2 <- 10
 K <- K1 + K2
+vec_bad <- c()
 for (j in 1:length(calc_files)) {
   load(paste0('analysis/results/joint_TS_20/', calc_files[j]))
   file <- ls(pattern = 'Grid_Pred')
   eval(parse(text=paste0('now <- ', file, '')))
-  if (sum(sapply(now, length)==0) > 0 | sum(sapply(now, length)==1) > 0) {
-     print(j)
-  }
-  eval(parse(text=paste0('rm(', file, ')')))
+  #   if (sum(sapply(now, length)==0) > 0){
+  #      print(c(0,j))
+  #     vec_bad[j] <- 'bad'
+  #   } else if(sum(sapply(now, length)==1) > 0) {
+  #     print(c(1,j))
+  #     vec_bad[j] <- 'bad'
+  #   }
+  #   eval(parse(text=paste0('rm(', file, ')')))
+  # }
+  # bad <- which(vec_bad == 'bad')
+  # paste0(bad, collapse = ',')
 
   indexes_used <- as.numeric(sapply(now, function(x) {
     if (length(x) == 3) {
-        x[1]
-      } else {
-        x[[10]][1]
-      }
+      x[1]
+    } else {
+      x[[10]][1]
+    }
   }))
   df_return <- lapply(1:length(now), function(x) {
     if (length(now[[x]]) == 1 | length(now[[x]]) == 0 | length(now[[x]]) == 3) {
@@ -38,9 +47,9 @@ for (j in 1:length(calc_files)) {
       m_res <- now[[x]][[1]][[n_steps]][[1]]
       mat <- cbind(matrix(c(indexes_used[x],as.vector(now[[x]][[6]]),
                             as.vector(sapply(1:K, function(x) exp(m_res[[x]]$par)))
-                            ),
-                          nrow = nrow(now[[x]][[3]]), ncol = 1 + K^2 + K*5 ,byrow = T),
-                   now[[x]][[3]])
+      ),
+      nrow = nrow(now[[x]][[3]]), ncol = 1 + K^2 + K*5 ,byrow = T),
+      now[[x]][[3]])
     }
     colnames(mat) <- c('index',
                        paste0('var', rep(1:K, each = K), '_', rep(1:K, times = K)),
@@ -57,6 +66,7 @@ for (j in 1:length(calc_files)) {
       now[[x]][[10]]
     }
   })
+  eval(parse(text=paste0('rm(', file, ')')))
 }
 # add longitude/latitude information
 latvals <- seq(-79.5, 79.5, by = 1)
@@ -85,8 +95,8 @@ prof_info <- do.call(rbind, prof_info)
 summary(prof_info)
 
 ### Predictions at 10, 300, and 1500 decibars###
-load('analysis/results/psal_one_stage_cov_pca.RData')
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/psal_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 year <- 2012
 
 # Salinity
@@ -95,7 +105,7 @@ p_vals <- c(10, 300, 1500)
 anomaly_pred_psal <- t(sapply(which(df$year == year), function(x) {
   coef <- as.double(df[x, paste0('S', rep(1:K2))])
   pc_coef <- coefs_pc_psal[[which(grid_pc_psal$long == df[x,'long'] &
-                               grid_pc_psal$lat == df[x,'lat'])]][[1]][,1:K2]
+                                    grid_pc_psal$lat == df[x,'lat'])]][[1]][,1:K2]
   vals <- rowSums(sapply(1:K2, function(y) coef[y] *pc_coef[,y] ))
   predict(make_fit_object(coefficients = vals, knots = knots_pc),
           p_vals)$y
@@ -164,8 +174,8 @@ anomaly_pred <- t(sapply(which(df$year == year), function(x) {
 colnames(anomaly_pred) <- paste0('pred', p_vals)
 
 ### 10 decibars ###
-x_min <- -4.657153
-x_max <- 3.716673
+x_min <- -4.657153 - 1.2
+x_max <- 3.716673 + 1.2
 ggplot()+
   geom_raster(data = cbind(df[df$year ==year,], pred = anomaly_pred[,1]),
               aes(x = long_p, y = lat, fill = pred))+
@@ -200,8 +210,8 @@ ggsave(filename = paste0('analysis/images/joint_TS_20/anomaly_', p_vals[2], '_te
        scale = .8,height = 4, width = 7.25)
 
 ## 1500 decibars ###
-x_min <- -0.6243476
-x_max <- 1.276535
+x_min <- -0.6243476 - .2
+x_max <- 1.276535 + .2
 ggplot()+
   geom_raster(data = cbind(df[df$year ==2012,], pred = anomaly_pred[,3]),
               aes(x = long_p, y = lat, fill = pred))+
@@ -225,7 +235,7 @@ df_params_only <- df[!duplicated(df$index),]
 
 a <- ggplot()+
   geom_raster(data = df_params_only, aes(x = long_p,
-                                      y = lat, fill = sqrt(var1_1)))+
+                                         y = lat, fill = sqrt(var1_1)))+
   map_plot +
   scale_fill_gradientn(colours = colorRamps::matlab.like(10), limits = c(0, 70)) +
   labs(x = 'Longitude', y = 'Latitude', fill = expression('SD\n°C/' * phi[1] * '(p)'))
@@ -239,7 +249,7 @@ ggsave(plot = a,
 
 a <- ggplot()+
   geom_raster(data = df_params_only, aes(x = long_p,
-                                      y = lat, fill = sqrt(var2_2)))+
+                                         y = lat, fill = sqrt(var2_2)))+
   geom_polygon(data = map_data('world2'), aes(x = long, y =lat, group = group),
                color = 'black', fill = 'white', size  = .2)+
   scale_fill_gradientn(colours = colorRamps::matlab.like(10), limits = c(0, sqrt(1200))) +
@@ -294,7 +304,7 @@ ggsave(plot = a,
 
 a <- ggplot()+
   geom_raster(data = df_params_only, aes(x = long_p,
-                                         y = lat, fill = scale_lon_1))+
+                                         y = lat, fill = scale_long_1))+
   map_plot +
   scale_fill_gradientn(limits = c(0,4000),
                        colours = colors_plot)+
@@ -344,6 +354,77 @@ ggplot()+
   geom_raster(data = df_params_only, aes(x = long_p,
                                          y = lat, fill = sigma2_2))+
   map_plot +
-  scale_fill_gradientn(limits = c(0,10),
+  scale_fill_gradientn(limits = c(0,30),
                        colours = colors_plot)+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Cor')
+
+
+
+
+# percent pcs
+calc_files <- list.files('analysis/results/joint_TS_20/',
+                         pattern = 'percent')
+load(paste0('analysis/results/joint_TS_20/',calc_files[2]))
+latvals <- seq(-79.5, 79.5, by = 1)
+longvals <- seq(20.5, 379.5, by = 1)
+longvals <- ifelse(longvals > 180, longvals - 360, longvals)
+grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
+grid_to_compute$order <- 1:nrow(grid_to_compute)
+
+temp_res <- sapply(result, function(x) {
+  if (length(x) == 3) {
+    return(NA)
+  } else {
+    return(x[[1]][2])
+  }
+})
+ggplot()+
+  geom_raster(data = cbind(grid_to_compute, temp_res)[!is.na(temp_res),],
+              aes(x = ifelse(long < 0, long+ 360, long), y = lat,
+                  fill = temp_res))+
+  map_plot+
+  scale_fill_viridis_b(breaks = c(.8, .85,.9, .95))+
+  labs(x = 'Longitude', y = 'Latitude',
+       fill = 'Prop Var')
+ggsave(filename = 'analysis/images/marginal_cov/temp_percent_var_10_new.png',
+       scale = .8,height = 4, width = 7.25)
+
+
+temp_res <- sapply(result, function(x) {
+  if (length(x) == 3) {
+    return(NA)
+  } else {
+    return(x[[3]][10,2])
+  }
+})
+ggplot()+
+  geom_raster(data = cbind(grid_to_compute, temp_res)[!is.na(temp_res),],
+              aes(x = ifelse(long < 0, long+ 360, long), y = lat,
+                  fill = temp_res))+
+  map_plot+
+  scale_fill_viridis_b(breaks = c(.8, .85,.9, .95))+
+  labs(x = 'Longitude', y = 'Latitude',
+       fill = '%Var')
+
+load(paste0('analysis/results/joint_TS_20/',calc_files[2]))
+temp_res <- sapply(result, function(x) {
+  if (length(x) == 3) {
+    return(NA)
+  } else {
+    return(x[[1]][2])
+  }
+})
+ggplot()+
+  geom_raster(data = cbind(grid_to_compute, temp_res)[!is.na(temp_res),],
+              aes(x = ifelse(long < 0, long+ 360, long), y = lat,
+                  fill = temp_res))+
+  map_plot+
+  scale_fill_viridis_b(breaks = c(.8, .85,.9, .95))+
+  labs(x = 'Longitude', y = 'Latitude',
+       fill = 'Prop Var')
+ggsave(filename = 'analysis/images/marginal_cov/psal_percent_var_10_new.png',
+       scale = .8,height = 4, width = 7.25)
+
+
+
+

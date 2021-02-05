@@ -6,7 +6,8 @@ library(fda)
 library(sparseinv)
 library(parallel)
 library(dplyr)
-
+library(functionalCovariance)
+setwd('/home/dyarger/argofda/')
 source('analysis/code/03_marginal_cov/covariance_source.R')
 
 load('analysis/data/jan_march_residuals.RData')
@@ -19,7 +20,7 @@ longvals <- seq(20.5, 379.5, by = 1)
 longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
 grid_to_compute$order <- 1:nrow(grid_to_compute)
-grid_to_compute_merge <- merge(grid_to_compute, RG_defined_long, all = T, sort = FALSE)
+grid_to_compute_merge <- left_join(grid_to_compute, RG_defined_long)
 grid_to_compute_merge$RG_defined <- ifelse(is.na(grid_to_compute_merge$value),
                                            FALSE,
                                            TRUE)
@@ -48,9 +49,9 @@ if (array_id == ceiling(nrow(grid_to_compute)/500)) {
 object_name <-  paste('Grid_Pred', value, sep = '')
 
 command <- paste(object_name, ' <- mclapply(indexes, cov_est_current,',
-                 'mi_max = 50,',
-                 'h_space = 550, knots = knots,  min_prof = 1,',
-                 'lambda = 3, basis, penalty_mat,',
+            #     'mi_max = 50,',
+                 'h_space = 600, knots = knots,  min_prof = 1,',
+                 'lambda = 3, basis = basis, penalty_mat = penalty_mat,',
                  'mc.preschedule = FALSE, mc.cores = 4',
                  ')', sep="")
 a <- proc.time()
@@ -62,7 +63,7 @@ if (nchar(value) == 3) {
 } else if(nchar(value) == 4) {
   value <- paste0('0',value)
 }
-file.to.save <- paste('analysis/results/marginal_cov/temp_one_stage_',
+file.to.save <- paste('analysis/results/marginal_cov/temp_',
                       value, '.Rdata', sep = '')
 eval(parse(text=paste('save(', object_name, ', file = file.to.save)', sep = '')))
 q()

@@ -8,10 +8,10 @@ calc_files <- list.files('analysis/results/nugget_variance/')
 final_list <- list()
 for (j in 1:length(calc_files)) {
   load(paste0('analysis/results/nugget_variance/', calc_files[j]))
-  file <- ls(pattern = 'Grid_Pred')
-  eval(parse(text=paste0('now <- ', file, '')))
-  eval(parse(text=paste0('rm(', file, ')')))
-
+  # file <- ls(pattern = 'Grid_Pred')
+  # eval(parse(text=paste0('now <- ', file, '')))
+  # eval(parse(text=paste0('rm(', file, ')')))
+now <- nugget_var
   indexes_used <- as.numeric(sapply(now, function(x) {
     if (length(x) == 3) {
       x[1]
@@ -58,3 +58,4 @@ longvals <- seq(20.5, 379.5, by = 1)
 longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 grid_nugget <- expand.grid(long = longvals, lat = latvals)
 grid_nugget <- grid_nugget[have_results,]
+

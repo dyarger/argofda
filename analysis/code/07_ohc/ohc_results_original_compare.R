@@ -1,11 +1,20 @@
-
-
-# MLD results
-
-load('analysis/results/ohc/ohc_700.RData')
+# ohc results
+files <- list.files('analysis/results/ohc/', pattern = 'cross_no_nugget')
+ohc_list <- list()
+for (i in 1:length(files)){
+  load(paste0('analysis/results/ohc/', files[i]))
+  ohc_list[[i]] <- ohc
+}
+library(ggplot2)
+library(dplyr)
+# 394386 49664  3.5 57.5 2007
+ohc <- do.call(rbind, ohc_list)
+colnames(ohc) <-   c('index', 'long', 'lat', 'year',
+                     'ohc_mean','ohc_pred', 'ohc_anomaly', 'ohc_avg_anomaly',
+                     'ohc_mean_red','ohc_pred_red', 'ohc_anomaly_red', 'ohc_avg_anomaly_red',
+                     'var_ohc', 'var_ohc_red', 'var_ohc_cross')
 library(ncdf4)
 library(raster)
-library(ggplot2)
 library(RColorBrewer)
 library(colorRamps)
 theme_set(theme_bw() + theme(panel.grid = element_blank(), text = element_text(size = 15),
@@ -19,14 +28,19 @@ adjust_area <- data.frame(lat = latitudes, area = m[,1])
 
 ohc <- merge(ohc, adjust_area)
 ohc$ohc_anomaly_adjust <- ohc$ohc_anomaly* ohc$area
-ohc$ohc_sd_adjust <- ohc$ohc_sd* ohc$area
+ohc$ohc_sd_adjust <- sqrt(ohc$var_ohc)* ohc$area
 ohc$ohc_avg_anomaly_adjust <- ohc$ohc_avg_anomaly* ohc$area
 ohc$long_p <- ifelse(ohc$long < 0, ohc$long+360, ohc$long)
+load('analysis/data/RG_Defined_mask.RData')
+ohc <- ohc %>%
+  inner_join(RG_defined_long) %>%
+  filter(value > 1999)
+
 # plot parameters
 h <- 6.5
 rescaling <- 10^(21)
-x_min <- -14*10^(19)
-x_max <- 13*10^(19)
+x_min <- -19*10^(19)
+x_max <- 19*10^(19)
 scale <- c(x_min, -3*10^(19), 0, 3*10^(19), x_max)/rescaling
 
 map_plot <-   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
@@ -36,7 +50,7 @@ colors_plot <-  c(scales::muted("blue"), "white", scales::muted("red"))
 colors_plot <-  c("blue", "white", "red")
 
 ggplot(data = ohc[ohc$year == year,], aes(x = long_p, y  =lat,
-                                               fill = ohc_anomaly_adjust/rescaling))+
+                                          fill = ohc_anomaly_adjust/rescaling))+
   geom_raster()+
   map_plot+
   scale_fill_gradientn(limits = c(scale[1], scale[length(scale)]), values = scales::rescale(scale),
@@ -51,7 +65,7 @@ ggsave(filename = paste0('analysis/images/ohc/ohc_700_pred_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
 
 ggplot(data = ohc[ohc$year == year,], aes(x = long_p, y  =lat,
-                                               fill = ohc_avg_anomaly_adjust/rescaling))+
+                                          fill = ohc_avg_anomaly_adjust/rescaling))+
   geom_raster()+
   map_plot+
   scale_fill_gradientn(limits = c(scale[1], scale[length(scale)]), values = scales::rescale(scale),
@@ -102,7 +116,7 @@ x_max <- 13*10^(19)
 scale <- c(x_min, -3*10^(19), 0, 3*10^(19), x_max)/rescaling
 
 ggplot(data = ohc[ohc$year == year,], aes(x = long_p,
-                                               y  =lat, fill = ohc_sd_adjust/rescaling))+
+                                          y  =lat, fill = ohc_sd_adjust/rescaling))+
   geom_raster()+
   scale_fill_gradientn(colours = colorRamps::matlab.like(10), limits = c(0, .06),
                        breaks = c(0, .025, .05)) +
@@ -115,10 +129,10 @@ ggsave(filename = paste0('analysis/images/ohc/ohc_700_sd_', year, '.png'),
 ggsave(filename = paste0('analysis/images/ohc/ohc_700_sd_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
 
-ggplot(data = ohc[ohc$year == year & !is.na(ohc$ohc_sd),],
-            aes(x = long_p, y  =lat,fill =
-                  factor(ifelse(ohc_anomaly > 2 * ohc_sd, 1,
-                                ifelse(ohc_anomaly < - 2 * ohc_sd, -1, 0)))))+
+ggplot(data = ohc[ohc$year == year & !is.na(ohc$var_ohc),],
+       aes(x = long_p, y  =lat,fill =
+             factor(ifelse(ohc_anomaly > 2 * sqrt(var_ohc), 1,
+                           ifelse(ohc_anomaly < - 2 * sqrt(var_ohc), -1, 0)))))+
   geom_raster()+
   scale_fill_manual(values = c('blue', 'white', 'darkred'))+
   map_plot +
@@ -130,10 +144,10 @@ ggsave(filename = paste0('analysis/images/ohc/ohc_700_pred_sig_', year, '.png'),
 ggsave(filename = paste0('analysis/images/ohc/ohc_700_pred_sig_', year, '.eps'),
        scale = .8,height = h, width = 7.25)
 
-ggplot(data = ohc[ohc$year == year & !is.na(ohc$ohc_sd),],
+ggplot(data = ohc[ohc$year == year & !is.na(ohc$var_ohc),],
        aes(x = long_p, y  =lat,fill =
-             factor(ifelse(ohc_avg_anomaly > 2 * ohc_sd, 1,
-                    ifelse(ohc_avg_anomaly < - 2 * ohc_sd, -1, 0)))))+
+             factor(ifelse(ohc_avg_anomaly > 2 * sqrt(var_ohc), 1,
+                           ifelse(ohc_avg_anomaly < - 2 * sqrt(var_ohc), -1, 0)))))+
   geom_raster()+
   scale_fill_manual(values = c('blue', 'white', 'darkred'))+
   map_plot +

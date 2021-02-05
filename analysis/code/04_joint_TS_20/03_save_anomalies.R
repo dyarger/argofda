@@ -46,13 +46,9 @@ library(parallel)
 load('analysis/results/joint_TS_20/preds.RData')
 
 # get PCs
-load('analysis/results/temp_one_stage_cov_pca.RData')
-coefs_pc_temp <- coefs_pc
-grid_pc_temp <- grid_pc
+load('analysis/results/temp_cov_pca.RData')
 basis <- create.bspline.basis(breaks =knots_pc)
-load('analysis/results/psal_one_stage_cov_pca.RData')
-grid_pc_psal <- grid_pc
-coefs_pc_psal <- coefs_pc
+load('analysis/results/psal_cov_pca.RData')
 
 ### get mean functions
 calc_files_temp <- list.files('analysis/results/mean_estimation/', pattern = 'temp')
@@ -64,7 +60,7 @@ longvals <- seq(20.5, 379.5, by = 1)
 longvals <- ifelse(longvals > 180, longvals - 360, longvals)
 
 grid_to_compute <- expand.grid('long' = longvals, 'lat' = latvals)
-
+grid_to_compute$index <- 1:nrow(grid_to_compute)
 pressure_vec <- c(10, 300, 1500)
 n_grid <- length(pressure_vec)
 # for each mean file, predict and save
@@ -88,6 +84,7 @@ for (j in 1:length(calc_files_temp)) {
   indexes_have_mean <- (1:500 + (j-1)*500)[have_results]
   indexes_have_both <- unique(df_preds$index[df_preds$index %in% indexes_have_mean])
   have_results_both <- which((1:500 + (j-1)*500) %in% indexes_have_both)
+  grid_to_compute_all_year <- grid_to_compute[indexes_have_both,]
   df_indexes <- df_preds[df_preds$index %in% indexes_have_both,]
   a <- proc.time()
   ohc <- lapply(1:nrow(df_indexes), get_mean_anomalies)
@@ -116,7 +113,7 @@ ggplot(data = mean_anomalies[mean_anomalies$year == 2012,],
   geom_raster()+
   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
                fill = 'white', size = .2, color = 'black')+
-  scale_fill_gradientn(limits = c(-3.5, 3.5),
+  scale_fill_gradientn(limits = c(-4.5, 4.5),
                        colours = RColorBrewer::brewer.pal(name = 'RdYlBu',n = 10)[10:1])+
   labs(x = NULL, y = NULL, fill = 'Pred (°C)')+
   theme(axis.ticks = element_blank(), axis.text = element_blank())
@@ -126,7 +123,7 @@ ggplot(data = mean_anomalies[mean_anomalies$year == 2012,],
   geom_raster()+
   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group),
                fill = 'white', size = .2, color = 'black')+
-  scale_fill_gradientn(limits = c(-3.5, 3.5),
+  scale_fill_gradientn(limits = c(-4.5, 4.5),
                        colours = RColorBrewer::brewer.pal(name = 'RdYlBu',n = 10)[10:1])+
   labs(x = NULL, y = NULL, fill = 'Pred (°C)')+
   theme(axis.ticks = element_blank(), axis.text = element_blank())
