@@ -23,13 +23,6 @@ for (j in 1:116) {
     mld_df$summaries_below[indexes] <- sapply(yearly_medians, function(x) {mean(
       final_list[[2]][[l]][,1] < x, na.rm = T)})
   }
-  # summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, quantile, na.rm = T, probs = c(.025, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, .975))})
-  # mean_summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, mean, na.rm = T)})
-  # sd_summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, sd, na.rm = T)})
-  #get_mld[[j]] <- list(final_list[[1]], summaries,mean_summaries,sd_summaries)
   print(j)
 }
 

@@ -35,44 +35,15 @@ for (j in 1:116) {
                                       locations_uncond$lat == locations$lat[x]]
     abs(final_list[[2]][[x]][[1]][,1] - summary_use)}))
   mat_groups_uncond <- matrix(groups, nrow = length(groups), ncol = 1000, byrow = F)
-  splits_uncond <- split(variances_uncond, mat_groups_uncond)
+  split_summaries_uncond <- split(variances_uncond, mat_groups_uncond)
   split_summaries_uncond <- sapply(splits_uncond, median, na.rm =T)
   split_summaries_uncond <- data.frame('location' = names(split_summaries_uncond),
                                 med_uncond = split_summaries_uncond)
   split_summaries_uncond <- tidyr::separate(split_summaries_uncond,
                                      'location', into = c('long','lat'),
                                      sep = '_')
-  # variance_loc_summary_uncond <- data.frame(locations, variances_uncond) %>%
-  #   dplyr::group_by(long, lat) %>%
-  #   summarise(variance_sum_uncond = median(variances_uncond), .groups = 'drop')
   variance_loc_all <- full_join(split_summaries,
                                 split_summaries_uncond)
-  # split_location <- split(final_list[[2]], groups)
-  # #locations_order <- names(split_location)
-  # #median_all <- sapply(split_location, function(x)
-  # #                     median(na.rm = T, sapply(x, function(y) y[[1]][,1])))
-  # # sum_all <- sapply(1:length(split_location), function(x)
-  # #   median(na.rm = T, sapply(split_location[[x]], function(y) abs(y[[1]][,1] -
-  # #                                                                   median_all[x]))))
-  # median_all <- sapply(split_location, function(x)
-  #   mean(na.rm = T, sapply(x, function(y) y[[1]][,1])))
-  #
-  # sum_all <- sapply(1:length(split_location), function(x)
-  #   mean(na.rm = T, sapply(split_location[[x]], function(y) (y[[1]][,1] -
-  #                                                                   median_all[x])^2)))
-  # variance_loc_all_summary <- data.frame('location' = names(median_all),
-  #                                        sum_all, median_all)
-  # variance_loc_all_summary <- tidyr::separate(variance_loc_all_summary,
-  #                                             'location', into = c('long','lat'),
-  #                                             sep = '_')
-  # variance_loc_all_summary$long <- as.numeric(variance_loc_all_summary$long)
-  # variance_loc_all_summary$lat <- as.numeric(variance_loc_all_summary$lat)
-  # variance_combined <- full_join(variance_loc_all_summary,
-  #                                variance_loc_summary, by = c('long', 'lat'))
-  #plot(variance_combined$sum_all, variance_combined$variance_sum)
-  #abline(a = 0,b = 1)
-  #ggplot(data = variance_combined)
-
   get_mld[[j]] <- variance_loc_all
   print(j)
 }
@@ -120,17 +91,32 @@ limits <- c(0, 400)
 h <- 6.5
 map_plot <-   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group), fill = 'white',
                            color = 'black', size = .2)
+load('analysis/results/mld/mld_grid_summaries_median_anova_mean_real.RData')
+get_mld_try <- do.call(rbind, get_mld)
+get_mld_try$long <- as.numeric(as.character(get_mld_try$long))
+get_mld_try$lat <- as.numeric(as.character(get_mld_try$lat))
 ggplot(data = get_mld_try  %>% inner_join(RG_defined_long) %>% filter(value > 1999),
        aes(x = ifelse(long < 0, long + 360, long), y = lat, fill = variance_sum))+
   geom_raster()+
   scale_fill_gradientn(values = scales::rescale(scale),
                        colours = colorRamps::matlab.like(10), limits = limits) +
   map_plot +
-  labs(x = 'Longitude', y = 'Latitude', fill = 'Proportion')
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Value')
 ggsave(filename = 'analysis/images/mld/MAE_y.png',
        scale = .8,height = h, width = 7.25, units = 'in', dpi = 200)
+scale <- c(seq(0, 50, by  =3),90, 130, 170, 210, 300, 400)
+ggplot(data = get_mld_try  %>% inner_join(RG_defined_long) %>% filter(value > 1999),
+       aes(x = ifelse(long < 0, long + 360, long), y = lat, fill = variance_sum))+
+  geom_raster()+
+  scale_fill_gradientn(values = scales::rescale(scale),
+                       colours = viridis::magma(10), limits = limits) +
+  map_plot +
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Value')
+ggsave(filename = 'analysis/images/mld/MAE_y_bw.png',
+       scale = .8,height = h, width = 7.25, units = 'in', dpi = 200)
 
-save(get_mld, file = 'analysis/results/mld/mld_grid_summaries_median_anova_mean_real.RData')
+
+#save(get_mld, file = 'analysis/results/mld/mld_grid_summaries_median_anova_mean_real.RData')
 q()
 
 # MLD results

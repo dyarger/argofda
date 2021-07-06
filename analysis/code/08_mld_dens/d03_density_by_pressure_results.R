@@ -51,9 +51,18 @@ ggplot()+
 ggsave('analysis/images/misc/dens_monotone_pressure_550.png',
        height = 4, width = 7.25)
 
+ggplot()+
+  geom_raster(data = data.frame(locations, proportions_100)[locations$year == 2015,] %>%
+                inner_join(RG_defined_long) %>% filter(value > 1999),
+              aes(x = ifelse(long < 0, long + 360, long), y =lat,
+                  fill = 1- proportions_100))+
+  map_plot +
+  scale_fill_gradient2(midpoint = .5, low = 'darkred', mid = 'gray', high= 'yellow')+
+  labs(x = 'Longitude', y = 'Latitude', fill = 'Proportion')
+ggsave('analysis/images/misc/dens_monotone_pressure_550_bw.png',
+       height = 4, width = 7.25)
 
 proportions_100 <- proportions[,276]
-
 ggplot()+
   geom_raster(data = data.frame(locations, proportions_100)[locations$year == 2015,] %>%
                 inner_join(RG_defined_long) %>% filter(value > 1999),

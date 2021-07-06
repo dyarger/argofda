@@ -3,7 +3,7 @@ library(ggplot2)
 library(viridis)
 library(argofda)
 library(dplyr)
-type <- 'temp'
+type <- 'psal'
 label <- c('Temperature', 'Salinity')[c('temp', 'psal') == type]
 label_units <- c('Temp (°C)', 'PSU')[c('temp', 'psal') == type]
 color_scale <- list(c(-2, 32),c(30, 38))[[which(c('temp', 'psal') == type)]]
@@ -147,8 +147,26 @@ ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_exampl
 ggsave(filename = paste0('analysis/images/mean_estimation/mean_', type, '_example_', long_example, '_', lat_example, '_large.png'),
        scale = 1.2, height = 5, width = 3.75, dpi = 600)
 
+
+ggplot(data = pred_vals_long[pred_vals_long$year %in% c('2010', '2013', 'Avg'),], aes(x = pressure, y = value))+
+  geom_line(data= data[data$year == 2010,], mapping = aes(x = pressure, y = response,group = profile),
+            alpha = .1)+
+  geom_point(data= data[data$year ==  2010,],
+             aes(x = pressure, y = response),size = .2, alpha = .1)+
+  geom_line(size = 1.05, aes(linetype = as.factor(year), color = as.factor(year)))+
+  scale_linetype_manual(values = c('solid', 'dashed', 'dotdash')) +
+  coord_flip(xlim = c(350, 0), ylim = ylim_example)+
+  scale_x_continuous(trans = 'reverse')+
+  scale_color_viridis_d(end = .6)+
+  labs(x = 'Pressure (decibars)', y = label_units,linetype = 'Function', color = 'Function')+
+  theme(legend.position = 'bottom', legend.key.width = unit(1.7, 'cm'))
+ggsave(filename = paste0('analysis/images/mean_estimation/mean_bw_', type, '_example_', long_example, '_', lat_example, '.png'),
+       scale = 1.2, height = 5, width = 3.75, dpi = 150)
+ggsave(filename = paste0('analysis/images/mean_estimation/mean_bw_', type, '_example_', long_example, '_', lat_example, '_large.png'),
+       scale = 1.2, height = 5, width = 3.75, dpi = 600)
+
 # extrapolate local linear day function
-ll_vals <- ll_single_location(-19.5+360, -19.5)
+ll_vals <- ll_single_location(-19.5, -19.5)
 time_seq <- seq(0, 90, by = 1)
 deriv_time_mat <- sapply(time_seq, function(x) {
   (x- 45.25) * ll_vals[,7] + (x- 45.25)^2 * ll_vals[,8]
@@ -163,7 +181,7 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_estimation/mean_', type, '_section_', long_section, '.png'),
+png(filename =  paste0('analysis/images/mean_estimation/mean_', type, '_section_', long_section, '.png'),
     width = 600, height = 450)
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
                    legend.cex = 8, cex.axis = 2.2)
@@ -178,12 +196,24 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_time_', long_section, '.png'),
+png(filename =  paste0('analysis/images/mean_estimation/mean_', type, '_section_ll_time_', long_section, '.png'),
     width = 600, height = 450)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
                    legend.cex = 1.8, cex.lab = 1.8, legend.lab = '°C/day', legend.line = 4,
                    legend.mar = 7, axis.args=list(cex.axis=1.6))
+axis(2, at = seq(0, 2000, by = 250)/2000, seq(0, 2000, by = 250), cex.axis = 1.6)
+axis(1, at=(seq(-50.5, 50.5, by = 10) + 50.5)/103.5, labels=seq(-50.5, 50.5, by = 10),
+     cex.axis = 1.6)
+dev.off()
+
+png(filename =  paste0('analysis/images/mean_estimation/mean_bw_', type, '_section_ll_time.png'),
+    width = 600, height = 450)
+par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
+fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
+                   legend.cex = 1.8, cex.lab = 1.8, legend.lab = '°C/day', legend.line = 4,
+                   legend.mar = 7, axis.args=list(cex.axis=1.6),
+                   col = topo.colors(64))
 axis(2, at = seq(0, 2000, by = 250)/2000, seq(0, 2000, by = 250), cex.axis = 1.6)
 axis(1, at=(seq(-50.5, 50.5, by = 10) + 50.5)/103.5, labels=seq(-50.5, 50.5, by = 10),
      cex.axis = 1.6)
@@ -196,7 +226,7 @@ pred_vals_section <- lapply(seq(-50.5, 50.5, by = 1),function(x) {
 pred_vals_section <- do.call(rbind, pred_vals_section)
 colnames(pred_vals_section) <- 0:2000
 rownames(pred_vals_section) <- seq(-50.5, 50.5, by = 1)
-png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
+png(filename =  paste0('analysis/images/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
     width = 600, height = 450)
 fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
                    legend.cex = 8, cex.axis = 2.2)
@@ -204,7 +234,15 @@ axis(2, at = seq(0, 2000, by = 250)/2000, seq(0, 2000, by = 250), cex = 5)
 axis(1, at=(seq(-50.5, 50.5, by = 10) + 50.5)/103.5, labels=seq(-50.5, 50.5, by = 10))
 dev.off()
 
-png(filename =  paste0('images/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
+png(filename =  paste0('analysis/images/mean_estimation/mean_bw_', type, '_section_ll_lat_', long_section - .5, '.png'),
+    width = 600, height = 450)
+fields::image.plot(pred_vals_section, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,
+                   legend.cex = 8, cex.axis = 2.2,col = topo.colors(64))
+axis(2, at = seq(0, 2000, by = 250)/2000, seq(0, 2000, by = 250), cex = 5)
+axis(1, at=(seq(-50.5, 50.5, by = 10) + 50.5)/103.5, labels=seq(-50.5, 50.5, by = 10))
+dev.off()
+
+png(filename =  paste0('analysisimages/mean_estimation/mean_', type, '_section_ll_lat_', long_section - .5, '.png'),
     width = 600, height = 450)
 par(mar=c(5.1, 4.1 + .5, 4.1, 2.1))
 fields::image.plot(pred_vals_section*100, ylim = c(1, 0), xlab = 'Latitude', ylab = 'Pressure (decibar)', axes=F,

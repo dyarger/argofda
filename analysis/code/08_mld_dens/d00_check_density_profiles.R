@@ -28,9 +28,6 @@ mean_decreasing_550 <- sapply(1:length(profDensAggr), function(x)  {
   dens <- profDensAggr[[x]][,1]
   pres <- profPresAggr[[x]][[1]]
   lagged <- lag(dens)
-  #lagged_pressure <- lag(pres)
-  #weights <- pres - lagged_pressure
-  #findInterval(550, pres, all.inside = T)
   (dens - lagged)[findInterval(550, pres, all.inside = T)+1] >= 0
 })
 
@@ -39,8 +36,6 @@ mean_decreasing_550_val <- sapply(1:length(profDensAggr), function(x)  {
   pres <- profPresAggr[[x]][[1]]
   lagged <- lag(dens)
   lagged_pressure <- lag(pres)
-  #weights <- pres - lagged_pressure
-  #findInterval(550, pres, all.inside = T)
   interv <- findInterval(550, pres, all.inside = T)+1
   (dens[interv] - lagged[interv])/(pres[interv] - lagged_pressure[interv])
 })
@@ -71,7 +66,7 @@ ggplot()+
   labs(x='Longitude', y = 'Latitude') +
   theme_gray()+ theme(panel.grid = element_blank(), text = element_text(size = 15))
 ggsave('analysis/images/misc/dens_monotone.png',
-       height = 4, width = 7.25)
+       height = 4, width = 7.25, dpi = 125)
 
 ggplot()+
   geom_point(data = df_comb[df_comb$profYearAggr == 2015 & df_comb$profMonthAggr==2,],
@@ -89,25 +84,37 @@ ggplot()+
              aes(x = ifelse(profLongAggr >360, profLongAggr - 360, profLongAggr) ,
                  y = profLatAggr, color = mean_decreasing_550_val),
              size = .2)+
-  # scale_color_gradientn(colors = rev(viridis_pal()(50)),values = scales::rescale(c(-.0005,  0, .001, .003, .006, .008)),
-  #                       limits = quantile(df_comb$mean_decreasing_550_val[df_comb$profYearAggr == 2015 & df_comb$profMonthAggr==2],
-  #                                         probs = c(.01, .99)))+
   scale_color_gradient2(limits = quantile(df_comb$mean_decreasing_550_val[df_comb$profYearAggr == 2015 & df_comb$profMonthAggr==2],
                                           probs = c(.0001, .995)),
                         low = 'blue', mid = 'white', high = 'red')+
   geom_polygon(data=  map_data('world2'), aes(x = long, y = lat, group = group),
                fill = 'white', color = 'black', size = .2) +
-  #g + xlab( expression(Value~is~sigma~R^{2}==0.6))
-  # labs(x='Longitude', y = 'Latitude',
-  #      color = expression(Density'\n'~is)) +
   labs(x='Longitude', y = 'Latitude',
-       #color = expression(paste('Density\nGradient\n', 'a (', kg, '/',m^{3},'/p)'))) +
   color =expression(atop("Density Gradient",
                          "(kg/"*m^{3}*"/p)"))) +
   theme_gray()+ theme(legend.title = element_text(size = 12),
                       panel.grid = element_blank(), text = element_text(size = 15))
 ggsave('analysis/images/misc/dens_monotone_550_profiles.png',
-       height = 4, width = 7.25)
+       height = 4, width = 7.25, dpi = 150)
+
+ggplot()+
+  geom_point(data = df_comb[df_comb$profYearAggr == 2015 & df_comb$profMonthAggr==2,],
+             aes(x = ifelse(profLongAggr >360, profLongAggr - 360, profLongAggr) ,
+                 y = profLatAggr, color = mean_decreasing_550_val),
+             size = .2)+
+  scale_color_gradient2(limits = quantile(df_comb$mean_decreasing_550_val[df_comb$profYearAggr == 2015 & df_comb$profMonthAggr==2],
+                                          probs = c(.0001, .995)),
+
+                        low = 'darkred', mid = 'gray', high = 'yellow')+
+  geom_polygon(data=  map_data('world2'), aes(x = long, y = lat, group = group),
+               fill = 'white', color = 'black', size = .2) +
+  labs(x='Longitude', y = 'Latitude',
+       color =expression(atop("Density Gradient",
+                              "(kg/"*m^{3}*"/p)"))) +
+  theme_gray()+ theme(legend.title = element_text(size = 12),
+                      panel.grid = element_blank(), text = element_text(size = 15))
+ggsave('analysis/images/misc/dens_monotone_550_profiles_bw.png',
+       height = 4, width = 7.25, dpi = 150)
 
 b <- ggplot()+
   geom_polygon(data=  map_data('world'), aes(x = long, y = lat, group = group),
@@ -121,7 +128,6 @@ b <- ggplot()+
                         limits = c(.18, 1))+
   labs(x='Longitude', y = 'Latitude') +
   coord_cartesian(xlim = c(-100, 20), ylim = c(0, 60))+
-  #facet_wrap(~profYearAggr, ncol = 3) +
   theme_gray()
 ggsave('analysis/images/misc/dens_monotone_atl.png',
        height = 4, width = 7.25)
@@ -143,40 +149,7 @@ a <- ggplot(data = df_preds_use_summary %>%
                        limits = c(.18, 1))+
   geom_polygon(data = map_data('world2'), aes(x =long, y = lat, group = group),
                fill = 'white', color = 'black', size = .2)+
-  #coord_cartesian(xlim = c(-100, 20), ylim = c(0, 60))+
   labs(x = 'Longitude', y = 'Latitude', fill = 'Proportion')
 a
 ggsave('analysis/images/misc/dens_prop_ours.png',
        height = 4, width = 7.25)
-library(patchwork)
-a / b
-
-a <- ggplot(data = df_preds_use_summary #%>%
-       #       inner_join( RG_defined_long) %>% filter(value > 1999)
-            ,
-            aes(x =ifelse(long < 0, long + 360, long), y = lat, fill = dens))+
-  geom_raster()+
-  scale_fill_gradient2(low = 'blue', mid = 'white', high = 'red',midpoint = .6,
-                       limits = c(.18, 1))+
-  geom_polygon(data = map_data('world2'), aes(x =long, y = lat, group = group),
-               fill = 'white', color = 'black', size = .2)+
-  coord_cartesian(xlim = c(160, 250), ylim = c(-75, -55))+
-  labs(x = 'Longitude', y = 'Latitude', fill = 'Proportion',
-       title = 'Proportion of Pressure Dimension with nonnegative derivative',
-       subtitle = 'February Predictions, reference pressure 0 dbar')
-a
-b <- ggplot()+
-  geom_polygon(data=  map_data('world2'), aes(x = long, y = lat, group = group),
-               fill = 'white', color = 'black', size = .2) +
-  geom_point(data = df,
-             aes(x = profLongAggr  ,
-                 y = profLatAggr, color = mean_decreasing),
-             size = .1)+
-  scale_color_gradient2(low = 'blue', mid = 'white',
-                        name = 'Prop Monotone',high = 'red', midpoint = .6,
-                        limits = c(.18, 1))+
-  labs(x='Longitude', y = 'Latitude') +
-  coord_cartesian(xlim = c(160, 250), ylim = c(-75, -55))+
-  theme_gray()
-b
-a/b

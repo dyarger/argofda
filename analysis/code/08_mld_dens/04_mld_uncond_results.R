@@ -23,13 +23,6 @@ for (j in 1:116) {
     mld_df$summaries_below[indexes] <- sapply(yearly_medians, function(x) {mean(
       final_list[[2]][[l]][,1] < x, na.rm = T)})
   }
-  # summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, quantile, na.rm = T, probs = c(.025, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, .975))})
-  # mean_summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, mean, na.rm = T)})
-  # sd_summaries <- lapply(final_list[[2]], function(x) {
-  #   apply(x, 2, sd, na.rm = T)})
-
 
   get_mld[[j]] <- list(final_list[[1]], summaries,mean_summaries,sd_summaries)
   print(j)
@@ -110,15 +103,6 @@ h <- 6.5
 map_plot <-   geom_polygon(data = map_data('world2'), aes(x = long, y = lat, group = group), fill = 'white',
                            color = 'black', size = .2)
 load('analysis/data/RG_Defined_mask.RData')
-a <- ggplot(data = mld_df_all %>%
-              filter(year == 2014) %>% inner_join(RG_defined_long) %>%
-              filter(value > 1999), aes(x = long_p, y = lat,
-                                        fill = (mean_year - mean)/sd))+
-  geom_raster() +
-  map_plot +
-  scale_fill_gradient2(limits = c(-2.5, 2.5))+
-  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
-a
 
 b <- ggplot(data = mld_df_all %>%
               filter(year == 2014) %>% inner_join(RG_defined_long) %>%
@@ -132,41 +116,5 @@ library(patchwork)
 a+b
 ggsave(a/b, file = 'analysis/images/mld/mld_uncon_compare.png',
        height = 9, width = 5)
-mld_df_all$z_scores <- (mld_df_all$mean_year - mld_df_all$mean)/
-  #(mld_df_all$sd + mld_df_all$sd_year)
-  (mld_df_all$sd)
-mld_p_val <- mld_df_all %>%
-  group_by(long, lat, long_p) %>%
-  summarise(t_stat = sum(z_scores^2),
-            nyear = n())
-mld_p_val <- mld_p_val %>%
-  mutate(p_val = pchisq(lower.tail = FALSE, q = t_stat,   df = nyear - 1))
-head(mld_p_val)
-summary(mld_p_val$p_val)
 
-a <- ggplot(data = mld_p_val  %>% inner_join(RG_defined_long) %>%
-              filter(value > 1999), aes(x = long_p, y = lat, fill = p_val))+
-  geom_raster() +
-  map_plot +
-  scale_fill_gradient2(limits = c(0,1), midpoint = .5)+
-  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
-a
-
-
-a <- ggplot(data = mld_df_all %>%
-              filter(year == 2012) %>% inner_join(RG_defined_long) %>%
-              filter(value > 1999), aes(x = long_p, y = lat, fill = abs((mean_year - mean)/sd) > 2))+
-  geom_raster() +
-  map_plot +
-  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
-a
-
-a <- ggplot(data = mld_df_all %>%
-              filter(year == 2014) %>% inner_join(RG_defined_long) %>%
-              filter(value > 1999), aes(x = long_p, y = lat, fill = sd - sd_year))+
-  geom_raster() +
-  map_plot +
-  scale_fill_gradient2(limits = c(-100, 100))+
-  labs(x = 'Longitude', y = 'Latitude', fill = 'MLD')
-a
 

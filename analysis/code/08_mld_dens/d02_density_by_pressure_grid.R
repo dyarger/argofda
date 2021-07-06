@@ -3,8 +3,9 @@ library(gsw)
 library(fda)
 library(dplyr)
 library(argofda)
+setwd('/home/dyarger/argofda/')
 load('analysis/results/joint_TS_20/preds.RData') # conditional predictions
-source('analysis/code/08_mld/mld_source.R') # load mld funs
+source('analysis/code/08_mld/d01_density_by_pressure_source.R') # load mld funs
 
 # set seed for each job array
 rseed <- 348
@@ -26,11 +27,11 @@ grid_to_compute <- grid_to_compute[(500*(array_id-1)+ 1):(500*array_id),]
 ### MLD ###
 
 # load pcs and only get the ones we need
-load('analysis/results/psal_one_stage_cov_pca.RData')
+load('analysis/results/psal_cov_pca.RData')
 grid_merge <- left_join(grid_pc_psal, grid_to_compute)
 coefs_pc_psal <- coefs_pc_psal[!is.na(grid_merge$index)]
 grid_pc_psal <- grid_pc_psal[!is.na(grid_merge$index),]
-load('analysis/results/temp_one_stage_cov_pca.RData')
+load('analysis/results/temp_cov_pca.RData')
 grid_merge <- left_join(grid_pc_temp, grid_to_compute)
 coefs_pc_temp <- coefs_pc_temp[!is.na(grid_merge$index)]
 grid_pc_temp <- grid_pc_temp[!is.na(grid_merge$index),]
@@ -41,7 +42,7 @@ mean_files_psal <- list.files('analysis/results/mean_estimation/', pattern = 'ps
 final_list <- list()
 
 delta <- 2
-pressure_vec <- seq(10, 2000, by = delta)
+pressure_vec <- seq(0, 2000, by = delta)
 # for each mean file, do conditional simulations
 pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
   # load mean functions
@@ -75,13 +76,13 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
   have_results_both <- which((1:500 + (j-1)*500) %in% indexes_have_both)
   df_indexes <- df_preds[df_preds$index %in% indexes_have_both,]
   print(nrow(df_indexes))
-  mld <- lapply(1:nrow(df_indexes), function(x) {
+  both_results <- lapply(1:nrow(df_indexes), function(x) {
     # compute mean and pcs at pressure values
     index <- df_indexes[x, 'index']
     year <- df_indexes[x, 'year']
-    mean_temp_one <- argofda::predict.local_function(temp_funs[have_results_both][[
+    mean_temp_one <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007)
-    mean_psal_one <- argofda::predict.local_function(psal_funs[have_results_both][[
+    mean_psal_one <- predict.local_function(psal_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007)
     long <- df_indexes[x,'long']
     lat <- df_indexes[x,'lat']
@@ -96,12 +97,12 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
 
 
     # derivatives
-    mu_temp_deriv <- argofda::predict.local_function(temp_funs[have_results_both][[
+    mu_temp_deriv <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007, deriv = 1)
-    mu_psal_deriv <- argofda::predict.local_function(temp_funs[have_results_both][[
+    mu_psal_deriv <- predict.local_function(temp_funs[have_results_both][[
       which(indexes_have_both == index)]],p_vals = pressure_vec,index = year - 2007, deriv = 1)
     phi_deriv <- sapply(as.data.frame(as.matrix(pc)), function(z) {
-      predict(argofda::make_fit_object(coefficients = z, knots = knots_pc),
+      predict(make_fit_object(coefficients = z, knots = knots_pc),
               pressure_vec, deriv = 1)$y
     })
 
@@ -122,69 +123,20 @@ pb_mld <- function(j, mean_files_temp, mean_files_psal, pressure_vec, K1, K2) {
       print(x/nrow(df_indexes))
     }
     # run MLD algorithms B times
-
-    full_psal <- list()
-    full_temp <- list()
-    full_pdens <- list()
-    mld <- c()
-    for (i in 1:50) {
-      coef_boot <- as.double(scores + var_scores_half %*% rnorm(K1 + K2))
-      pred_temp <- .rowSums(pred_pc[,1:K1] %*% diag(coef_boot[1:K1]), m = length(pressure_vec), n = K1)
-      pred_psal <- .rowSums(pred_pc[,(K1+1):(K1+K2)] %*% diag(coef_boot[(K1+1):(K1+K2)]), m = length(pressure_vec), n = K2)
-      full_psal[[i]] <- mean_psal_one + pred_psal
-      full_temp[[i]] <- mean_temp_one + pred_temp
-      SA <- gsw_SA_from_SP(SP = full_psal[[i]],p = pressure_vec, longitude = long, latitude = lat)
-      full_pdens[[i]] <- gsw::gsw_pot_rho_t_exact(SA = SA, t = full_temp[[i]],
-                                        p = pressure_vec, p_ref = 0)
-      deriv_pred_boot <- .rowSums(phi_deriv[,1:K1] %*% diag(coef_boot[1:K1]), m = length(pressure_vec), n = K1)
-      full_deriv_temp <- mu_temp_deriv + deriv_pred_boot
-      mld[i] = bs_fun_preds(full_temp[[i]], full_psal[[i]], full_deriv_temp, pressure_vec, long, lat, delta)[1]
-    }
-
-    #save(full_temp, full_psal, mld, file = 'analysis/results/jsm_example2.RData')
-    library(scales)
-x;array_id; 4# x;array_id; 3; 2078; 80
-    png(filename = 'analysis/images/misc/jsm_example4.png',
-       width = 600*4, height = 1000*4, res = 4*144)
-    plot(y = pressure_vec, x= full_pdens[[1]] - 1000, type = 'l', ylim = c(2000, 0),
-        # xlim = c(34.1, 35.3),
-        xlim = c(24.5, 27.8),
-         xlab = 'Potential density (kg/m^3)',
-         ylab = 'Pressure (decibars)', col=alpha(rgb(0,0,0), 0.2))
-    points(y=pressure_vec[pressure_vec==mld[1]],
-           full_pdens[[1]][pressure_vec==mld[1]] - 1000, cex = .4, col = 2)
-    for(i in 1:50) {
-      lines(y=pressure_vec, full_pdens[[i]]-1000, col=alpha(rgb(0,0,0), 0.2))
-      points(y=pressure_vec[pressure_vec==mld[i]],
-             full_pdens[[i]][pressure_vec==mld[i]] - 1000, cex = .4,col =2 )
-    }
-    dev.off()
-
-
-
-    png(filename = 'analysis/images/misc/jsm_example.png',
-        width = 600, height = 1000, res = 144)
-    plot(y = pressure_vec, x= full_psal[[1]], type = 'l', ylim = c(2000, 0),
-         xlim = c(34.1, 35.3),xlab = 'Salinity (PSU)',
-         ylab = 'Pressure (decibars)')
-    for(i in 1:50) {
-      lines(y=pressure_vec, full_psal[[i]])
-    }
-    dev.off()
-
-
-    bs_results <- t(sapply(1:B, bs_fun, scores = scores, phi_deriv = phi_deriv, pred_pc = pred_pc, var_scores_half =
-                             var_scores_half, long = long, lat = lat, mean_psal_one = mean_psal_one, mean_temp_one = mean_temp_one,
-                           pressure_vec = pressure_vec, mu_temp_deriv = mu_temp_deriv, mu_psal_deriv = mu_psal_deriv, K1 = K1, K2 = K2,
-                           delta = delta))
+    bs_results <- sapply(1:B, bs_fun, scores = scores, phi_deriv = phi_deriv, pred_pc = pred_pc, var_scores_half =
+                           var_scores_half, long = long, lat = lat, mean_psal_one = mean_psal_one, mean_temp_one = mean_temp_one,
+                         pressure_vec = pressure_vec, mu_temp_deriv = mu_temp_deriv, mu_psal_deriv = mu_psal_deriv, K1 = K1, K2 = K2,
+                         delta = delta)
+    dens_results <- rowMeans(bs_results)
+    return(dens_results)
   })
-  return(list(df_indexes[, c('long', 'lat', 'index', 'year')],mld))
+  return(list(df_indexes[, c('long', 'lat', 'index', 'year')],both_results))
 }
 library(parallel)
 
 final_list <- pb_mld(array_id,
                      mean_files_temp = mean_files_temp, mean_files_psal = mean_files_psal,
                      pressure_vec = pressure_vec, K1 = 10, K2 = 10)
-save(final_list, file = paste0('analysis/results/mld/mld_', array_id,
+save(final_list, file = paste0('analysis/results/dens/dens_p_', array_id,
                                '.RData'))
 q()
